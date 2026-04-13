@@ -116,6 +116,7 @@ def create_material(
         cost=data.cost,
         level=data.level,
         language=data.language,
+        description=data.description,
         created_by=current_user.id,
     )
     db.add(material)
@@ -170,6 +171,8 @@ def update_material(
         material.level = data.level
     if data.language is not None:
         material.language = data.language
+    if data.description is not None:
+        material.description = data.description
 
     if data.tag_ids is not None:
         db.query(MaterialTag).filter(MaterialTag.material_id == material_id).delete()

@@ -240,6 +240,13 @@ export default function MaterialDetailPage() {
               </div>
             </div>
 
+            {material.description && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="text-xs text-slate-400 mb-1">説明・備考</div>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{material.description}</p>
+              </div>
+            )}
+
             {material.tags.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {material.tags.map((t) => (

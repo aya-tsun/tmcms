@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
@@ -31,6 +31,7 @@ class Material(Base):
     cost = Column(Float, nullable=True)  # yen per license
     level = Column(Enum(MaterialLevel), nullable=True)
     language = Column(Enum(MaterialLanguage), nullable=True)
+    description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
 

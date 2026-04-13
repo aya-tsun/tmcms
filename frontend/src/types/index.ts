@@ -34,6 +34,7 @@ export interface Material {
   cost?: number;
   level?: MaterialLevel;
   language?: MaterialLanguage;
+  description?: string;
   created_at: string;
   created_by?: number;
   creator_name?: string;

@@ -15,6 +15,7 @@ class MaterialCreate(BaseModel):
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    description: Optional[str] = None
     tag_ids: List[int] = []
 
     @field_validator("url")
@@ -34,6 +35,7 @@ class MaterialUpdate(BaseModel):
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    description: Optional[str] = None
     tag_ids: Optional[List[int]] = None
 
     @field_validator("url")
@@ -60,6 +62,7 @@ class MaterialOut(BaseModel):
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    description: Optional[str] = None
     created_at: datetime
     created_by: Optional[int] = None
     creator_name: Optional[str] = None

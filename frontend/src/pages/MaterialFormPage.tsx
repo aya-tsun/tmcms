@@ -21,6 +21,7 @@ interface FormState {
   cost: string;
   level: string;
   language: string;
+  description: string;
   tag_ids: number[];
 }
 
@@ -38,6 +39,7 @@ export default function MaterialFormPage() {
     cost: '',
     level: '',
     language: '',
+    description: '',
     tag_ids: [],
   });
 
@@ -61,6 +63,7 @@ export default function MaterialFormPage() {
           cost: m.cost?.toString() || '',
           level: m.level || '',
           language: m.language || '',
+          description: m.description || '',
           tag_ids: m.tags.map((t) => t.id),
         });
         setLoading(false);
@@ -98,6 +101,7 @@ export default function MaterialFormPage() {
         cost: form.cost ? Number(form.cost) : undefined,
         level: form.level || undefined,
         language: form.language || undefined,
+        description: form.description.trim() || undefined,
         tag_ids: form.tag_ids,
       };
       if (isEdit && id) {
@@ -298,6 +302,17 @@ export default function MaterialFormPage() {
               />
               {errors.cost && <p className="text-red-500 text-xs mt-1">{errors.cost}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">説明・備考</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={4}
+              placeholder="教材の概要、特徴、社内での利用実績など自由に記入してください"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
