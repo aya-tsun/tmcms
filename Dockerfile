@@ -23,7 +23,9 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 # Data directory for SQLite
 RUN mkdir -p /data
 ENV DATABASE_URL=sqlite:////data/tmcms.db
+ENV PORT=8000
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# PORT env var support for Railway/Render
+CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}

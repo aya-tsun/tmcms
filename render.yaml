@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tmcms
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:////data/tmcms.db
+    disk:
+      name: tmcms-data
+      mountPath: /data
+      sizeGB: 1
