@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Use VITE_API_URL for external backend (GitHub Pages + Render),
+// fallback to /api for local dev / single-server deployment.
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
+
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 

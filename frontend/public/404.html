@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    // GitHub Pages SPA redirect hack
+    // Redirects 404 to index.html preserving the path
+    var path = window.location.pathname;
+    var repo = path.split('/')[1];
+    sessionStorage.setItem('redirect', path);
+    window.location.replace('/' + repo + '/');
+  </script>
+</head>
+<body></body>
+</html>
