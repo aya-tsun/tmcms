@@ -1,3 +1,7 @@
+databases:
+  - name: tmcms-db
+    plan: free
+
 services:
   - type: web
     name: tmcms
@@ -8,8 +12,6 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite:////data/tmcms.db
-    disk:
-      name: tmcms-data
-      mountPath: /data
-      sizeGB: 1
+        fromDatabase:
+          name: tmcms-db
+          property: connectionString
