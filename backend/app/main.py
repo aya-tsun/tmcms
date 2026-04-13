@@ -18,7 +18,7 @@ app = FastAPI(title="TMCMS API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,3 +57,20 @@ create_initial_admin()
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+# Serve frontend static files (production build)
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
+
+if os.path.isdir(FRONTEND_DIST):
+    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
+
+    @app.get("/favicon.svg")
+    def favicon():
+        return FileResponse(os.path.join(FRONTEND_DIST, "favicon.svg"))
+
+    # Catch-all: serve index.html for React Router (SPA)
+    @app.get("/{full_path:path}")
+    def serve_spa(full_path: str):
+        index = os.path.join(FRONTEND_DIST, "index.html")
+        return FileResponse(index)
