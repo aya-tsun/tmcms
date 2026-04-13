@@ -79,9 +79,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-xs text-slate-400 text-center mt-6">
-          初期: admin@example.com / admin1234
-        </p>
       </div>
     </div>
   );
