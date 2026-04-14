@@ -76,13 +76,16 @@ export default function UserManagePage() {
     }
   };
 
+  const inputClass = "w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 transition-all";
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">ユーザー管理</h1>
+        <h1 className="text-2xl font-bold" style={{ color: '#4c1d95' }}>ユーザー管理</h1>
         <button
           onClick={openCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
         >
           + ユーザー追加
         </button>
@@ -90,34 +93,34 @@ export default function UserManagePage() {
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md border border-purple-100">
+            <h2 className="text-lg font-bold mb-5" style={{ color: '#4c1d95' }}>
               {editingUser ? 'ユーザーを編集' : 'ユーザーを追加'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">名前</label>
+                <label className="block text-sm font-semibold text-purple-700 mb-1.5">名前</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
+                <label className="block text-sm font-semibold text-purple-700 mb-1.5">メールアドレス</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-purple-700 mb-1.5">
                   パスワード{editingUser && ' （変更する場合のみ入力）'}
                 </label>
                 <input
@@ -125,22 +128,22 @@ export default function UserManagePage() {
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   required={!editingUser}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">ロール</label>
+                <label className="block text-sm font-semibold text-purple-700 mb-1.5">ロール</label>
                 <select
                   value={form.role}
                   onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as 'admin' | 'member' }))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={inputClass}
                 >
                   <option value="member">メンバー</option>
                   <option value="admin">管理者</option>
                 </select>
               </div>
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg border border-red-200">
+                <div className="bg-red-50 text-red-500 text-sm px-4 py-3 rounded-xl border border-red-100">
                   {error}
                 </div>
               )}
@@ -148,14 +151,15 @@ export default function UserManagePage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="border border-slate-300 px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="border-2 border-purple-200 px-5 py-2 rounded-xl text-sm text-purple-600 hover:bg-purple-50 transition-all font-medium"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60 transition-colors"
+                  className="text-white px-5 py-2 rounded-xl text-sm font-semibold disabled:opacity-60 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
                 >
                   {saving ? '保存中...' : editingUser ? '更新' : '作成'}
                 </button>
@@ -166,56 +170,56 @@ export default function UserManagePage() {
       )}
 
       {/* User table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="text-center py-12 text-slate-400">読み込み中...</div>
+          <div className="text-center py-12 text-purple-300">読み込み中...</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-100">
+            <thead className="border-b border-purple-50" style={{ backgroundColor: '#faf5ff' }}>
               <tr>
-                <th className="px-6 py-3 text-left font-semibold text-slate-600">名前</th>
-                <th className="px-6 py-3 text-left font-semibold text-slate-600">メールアドレス</th>
-                <th className="px-6 py-3 text-center font-semibold text-slate-600">ロール</th>
-                <th className="px-6 py-3 text-left font-semibold text-slate-600">登録日</th>
-                <th className="px-6 py-3 text-right font-semibold text-slate-600">操作</th>
+                <th className="px-6 py-3.5 text-left font-semibold text-purple-600">名前</th>
+                <th className="px-6 py-3.5 text-left font-semibold text-purple-600">メールアドレス</th>
+                <th className="px-6 py-3.5 text-center font-semibold text-purple-600">ロール</th>
+                <th className="px-6 py-3.5 text-left font-semibold text-purple-600">登録日</th>
+                <th className="px-6 py-3.5 text-right font-semibold text-purple-600">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-purple-50">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-3 font-medium text-slate-800">
+                <tr key={u.id} className="hover:bg-purple-50/40 transition-colors">
+                  <td className="px-6 py-3.5 font-semibold text-slate-700">
                     {u.name}
                     {u.id === currentUser?.id && (
-                      <span className="ml-2 text-xs text-slate-400">（自分）</span>
+                      <span className="ml-2 text-xs text-purple-300">（自分）</span>
                     )}
                   </td>
-                  <td className="px-6 py-3 text-slate-600">{u.email}</td>
-                  <td className="px-6 py-3 text-center">
+                  <td className="px-6 py-3.5 text-slate-500">{u.email}</td>
+                  <td className="px-6 py-3.5 text-center">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
                         u.role === 'admin'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                          : 'bg-purple-50 text-purple-500 border-purple-100'
                       }`}
                     >
                       {u.role === 'admin' ? '管理者' : 'メンバー'}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-slate-500 text-xs">
+                  <td className="px-6 py-3.5 text-purple-300 text-xs">
                     {new Date(u.created_at).toLocaleDateString('ja-JP')}
                   </td>
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-6 py-3.5 text-right">
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openEdit(u)}
-                        className="text-xs border border-slate-200 px-2.5 py-1 rounded hover:bg-slate-50 transition-colors"
+                        className="text-xs border border-violet-200 text-violet-600 px-2.5 py-1 rounded-lg hover:bg-violet-50 hover:border-violet-400 transition-all"
                       >
                         編集
                       </button>
                       {u.id !== currentUser?.id && (
                         <button
                           onClick={() => handleDelete(u)}
-                          className="text-xs border border-red-200 text-red-500 px-2.5 py-1 rounded hover:bg-red-50 transition-colors"
+                          className="text-xs border border-red-100 text-red-400 px-2.5 py-1 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all"
                         >
                           削除
                         </button>

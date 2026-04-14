@@ -139,74 +139,81 @@ export default function MaterialFormPage() {
       setForm((f) => ({ ...f, [key]: e.target.value })),
   });
 
+  const inputClass = (hasError?: boolean) =>
+    `w-full border-2 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
+      hasError
+        ? 'border-red-300 focus:ring-red-200'
+        : 'border-purple-100 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30'
+    }`;
+
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-16 text-slate-400">読み込み中...</div>
+        <div className="text-center py-16 text-purple-300">読み込み中...</div>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <nav className="text-sm text-slate-500 mb-4">
-        <Link to="/" className="hover:text-blue-600">教材一覧</Link>
+      <nav className="text-sm text-purple-400 mb-5">
+        <Link to="/" className="hover:text-violet-600 transition-colors">教材一覧</Link>
         {isEdit && id && (
           <>
             <span className="mx-2">/</span>
-            <Link to={`/materials/${id}`} className="hover:text-blue-600">教材詳細</Link>
+            <Link to={`/materials/${id}`} className="hover:text-violet-600 transition-colors">教材詳細</Link>
           </>
         )}
         <span className="mx-2">/</span>
-        <span className="text-slate-800">{isEdit ? '編集' : '新規登録'}</span>
+        <span style={{ color: '#4c1d95' }}>{isEdit ? '編集' : '新規登録'}</span>
       </nav>
 
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">
+      <h1 className="text-2xl font-bold mb-6" style={{ color: '#4c1d95' }}>
         {isEdit ? '教材を編集' : '教材を登録'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
         {errors.form && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-200 text-sm">
+          <div className="bg-red-50 text-red-500 px-4 py-3 rounded-2xl border border-red-100 text-sm">
             {errors.form}
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <h2 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">基本情報</h2>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4">
+          <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2">基本情報</h2>
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              教材名 <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">
+              教材名 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               {...field('name')}
               placeholder="例: Python入門コース"
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.name ? 'border-red-400' : 'border-slate-300'}`}
+              className={inputClass(!!errors.name)}
             />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
           </div>
 
           {/* URL */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              URL <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">
+              URL <span className="text-red-400">*</span>
             </label>
             <input
               type="url"
               {...field('url')}
               placeholder="https://www.udemy.com/course/..."
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.url ? 'border-red-400' : 'border-slate-300'}`}
+              className={inputClass(!!errors.url)}
             />
-            {errors.url && <p className="text-red-500 text-xs mt-1">{errors.url}</p>}
+            {errors.url && <p className="text-red-400 text-xs mt-1">{errors.url}</p>}
           </div>
 
           {/* Provider */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              提供元 <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">
+              提供元 <span className="text-red-400">*</span>
             </label>
             <div className="flex gap-2 flex-wrap mb-2">
               {PROVIDERS.map((p) => (
@@ -214,10 +221,10 @@ export default function MaterialFormPage() {
                   key={p}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, provider: p }))}
-                  className={`text-sm px-3 py-1 rounded-full border transition-colors ${
+                  className={`text-sm px-4 py-1.5 rounded-full border-2 transition-all font-medium ${
                     form.provider === p
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-slate-300 text-slate-600 hover:border-blue-400'
+                      ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
+                      : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
                   }`}
                 >
                   {p}
@@ -229,69 +236,68 @@ export default function MaterialFormPage() {
               value={form.provider}
               onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
               placeholder="または直接入力"
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.provider ? 'border-red-400' : 'border-slate-300'}`}
+              className={inputClass(!!errors.provider)}
             />
-            {errors.provider && <p className="text-red-500 text-xs mt-1">{errors.provider}</p>}
+            {errors.provider && <p className="text-red-400 text-xs mt-1">{errors.provider}</p>}
           </div>
-
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <h2 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">詳細情報（任意）</h2>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4">
+          <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2">詳細情報（任意）</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">受講時間（時間）</label>
+              <label className="block text-sm font-semibold text-purple-700 mb-1.5">受講時間（時間）</label>
               <input
                 type="number"
                 min="0"
                 step="0.5"
                 {...field('duration')}
                 placeholder="例: 10.5"
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.duration ? 'border-red-400' : 'border-slate-300'}`}
+                className={inputClass(!!errors.duration)}
               />
-              {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
+              {errors.duration && <p className="text-red-400 text-xs mt-1">{errors.duration}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">費用（円/ライセンス）</label>
+              <label className="block text-sm font-semibold text-purple-700 mb-1.5">費用（円/ライセンス）</label>
               <input
                 type="number"
                 min="0"
                 {...field('cost')}
                 placeholder="例: 3000"
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.cost ? 'border-red-400' : 'border-slate-300'}`}
+                className={inputClass(!!errors.cost)}
               />
-              {errors.cost && <p className="text-red-500 text-xs mt-1">{errors.cost}</p>}
+              {errors.cost && <p className="text-red-400 text-xs mt-1">{errors.cost}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">説明・備考</label>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">説明・備考</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={4}
               placeholder="教材の概要、特徴、社内での利用実績など自由に記入してください"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-y"
+              className="w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 resize-y transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">対象レベル</label>
+              <label className="block text-sm font-semibold text-purple-700 mb-1.5">対象レベル</label>
               <select
                 {...field('level')}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={inputClass()}
               >
                 <option value="">選択してください</option>
                 {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">言語</label>
+              <label className="block text-sm font-semibold text-purple-700 mb-1.5">言語</label>
               <select
                 {...field('language')}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={inputClass()}
               >
                 <option value="">選択してください</option>
                 {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
@@ -301,18 +307,18 @@ export default function MaterialFormPage() {
         </div>
 
         {/* Tags */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h2 className="font-semibold text-slate-700 border-b border-slate-100 pb-2 mb-3">タグ</h2>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6">
+          <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2 mb-4">タグ</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {allTags.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => toggleTag(t.id)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
                   form.tag_ids.includes(t.id)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'border-slate-300 text-slate-600 hover:border-blue-400'
+                    ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
+                    : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
                 }`}
               >
                 {t.name}
@@ -326,12 +332,12 @@ export default function MaterialFormPage() {
               onChange={(e) => setNewTagName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
               placeholder="新しいタグを追加"
-              className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 transition-all"
             />
             <button
               type="button"
               onClick={handleAddTag}
-              className="border border-slate-300 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+              className="border-2 border-purple-200 px-4 py-2 rounded-xl text-sm text-purple-600 hover:bg-violet-50 hover:border-violet-400 transition-all font-medium"
             >
               追加
             </button>
@@ -342,13 +348,14 @@ export default function MaterialFormPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-60 transition-colors"
+            className="text-white px-7 py-2.5 rounded-2xl font-semibold disabled:opacity-60 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
           >
             {saving ? '保存中...' : isEdit ? '更新する' : '登録する'}
           </button>
           <Link
             to={isEdit ? `/materials/${id}` : '/'}
-            className="border border-slate-300 text-slate-600 px-6 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+            className="border-2 border-purple-200 text-purple-600 px-7 py-2.5 rounded-2xl font-semibold hover:bg-purple-50 transition-all"
           >
             キャンセル
           </Link>

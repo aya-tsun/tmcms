@@ -52,7 +52,7 @@ export default function ComparePage() {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-16 text-slate-400">読み込み中...</div>
+        <div className="text-center py-16 text-purple-300">読み込み中...</div>
       </Layout>
     );
   }
@@ -60,14 +60,14 @@ export default function ComparePage() {
   if (materials.length === 0) {
     return (
       <Layout>
-        <div className="text-center py-16 text-slate-400">比較対象が選択されていません</div>
+        <div className="text-center py-16 text-purple-300">比較対象が選択されていません</div>
       </Layout>
     );
   }
 
   const rows = [
     { label: '教材名', render: (m: Material) => (
-      <Link to={`/materials/${m.id}`} className="font-medium text-blue-700 hover:underline">
+      <Link to={`/materials/${m.id}`} className="font-semibold text-violet-700 hover:underline">
         {m.name}
       </Link>
     )},
@@ -80,7 +80,7 @@ export default function ComparePage() {
       <div className="flex flex-wrap gap-1">
         {m.tags.length > 0
           ? m.tags.map((t) => (
-              <span key={t.id} className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
+              <span key={t.id} className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100 font-medium">
                 {t.name}
               </span>
             ))
@@ -89,16 +89,16 @@ export default function ComparePage() {
     )},
     { label: '総合評価', render: (m: Material) =>
       m.overall_score != null ? (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <StarRating value={Math.round(m.overall_score)} readonly size="sm" />
-          <span className="text-sm">{m.overall_score.toFixed(1)}</span>
+          <span className="text-sm font-semibold">{m.overall_score.toFixed(1)}</span>
         </div>
-      ) : '未評価'
+      ) : <span className="text-purple-300 text-sm">未評価</span>
     },
     { label: '評価件数', render: (m: Material) => `${m.evaluation_count}件` },
     { label: 'URL', render: (m: Material) => (
       <a href={m.url} target="_blank" rel="noopener noreferrer"
-        className="text-blue-600 hover:underline text-xs break-all">
+        className="text-violet-500 hover:underline hover:text-violet-700 text-xs break-all transition-colors">
         リンク
       </a>
     )},
@@ -110,53 +110,53 @@ export default function ComparePage() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <nav className="text-sm text-slate-500 mb-1">
-            <Link to="/" className="hover:text-blue-600">教材一覧</Link>
+          <nav className="text-sm text-purple-400 mb-1">
+            <Link to="/" className="hover:text-violet-600 transition-colors">教材一覧</Link>
             <span className="mx-2">/</span>
-            <span className="text-slate-800">比較</span>
+            <span style={{ color: '#4c1d95' }}>比較</span>
           </nav>
-          <h1 className="text-2xl font-bold text-slate-800">教材比較</h1>
+          <h1 className="text-2xl font-bold" style={{ color: '#4c1d95' }}>教材比較</h1>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => handleExport('csv')}
-            className="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-sm transition-colors"
+            className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-4 py-2 rounded-xl text-sm font-medium transition-all"
           >
             CSV出力
           </button>
           <button
             onClick={() => handleExport('xlsx')}
-            className="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-sm transition-colors"
+            className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-4 py-2 rounded-xl text-sm font-medium transition-all"
           >
             Excel出力
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="px-4 py-3 text-left font-semibold text-slate-700 w-36 sticky left-0 bg-slate-50">
+            <tr className="border-b border-purple-100" style={{ backgroundColor: '#faf5ff' }}>
+              <th className="px-5 py-3.5 text-left font-semibold text-purple-700 w-36 sticky left-0" style={{ backgroundColor: '#faf5ff' }}>
                 項目
               </th>
               {materials.map((m) => (
-                <th key={m.id} className="px-4 py-3 text-left font-semibold text-slate-700 min-w-48">
-                  <Link to={`/materials/${m.id}`} className="text-blue-700 hover:underline">
+                <th key={m.id} className="px-5 py-3.5 text-left font-semibold text-purple-700 min-w-48">
+                  <Link to={`/materials/${m.id}`} className="text-violet-700 hover:underline">
                     {m.name}
                   </Link>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-purple-50">
             {rows.map((row, i) => (
-              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                <td className="px-4 py-3 font-medium text-slate-600 sticky left-0 bg-inherit">
+              <tr key={i} className={i % 2 === 0 ? 'bg-white/60' : 'bg-purple-50/30'}>
+                <td className="px-5 py-3.5 font-semibold text-purple-600 sticky left-0 bg-inherit text-sm">
                   {row.label}
                 </td>
                 {materials.map((m) => (
-                  <td key={m.id} className="px-4 py-3 text-slate-700">
+                  <td key={m.id} className="px-5 py-3.5 text-slate-600">
                     {row.render(m)}
                   </td>
                 ))}
@@ -166,8 +166,8 @@ export default function ComparePage() {
         </table>
       </div>
 
-      <div className="mt-4 text-sm text-slate-500">
-        <Link to="/" className="text-blue-600 hover:underline">← 教材一覧に戻る</Link>
+      <div className="mt-4 text-sm">
+        <Link to="/" className="text-violet-500 hover:text-violet-700 hover:underline transition-colors">← 教材一覧に戻る</Link>
       </div>
     </Layout>
   );
