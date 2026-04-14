@@ -29,7 +29,6 @@ export interface Material {
   name: string;
   url: string;
   provider: string;
-  category: string;
   duration?: number;
   cost?: number;
   level?: MaterialLevel;
@@ -82,7 +81,6 @@ export interface Memo {
 export interface MaterialFilters {
   search?: string;
   provider?: string;
-  category?: string;
   tag_ids?: string;
   level?: string;
   language?: string;

@@ -5,10 +5,6 @@ import type { Tag } from '../types';
 import Layout from '../components/Layout';
 
 const PROVIDERS = ['Udemy', 'Coursera', '自社', 'LinkedIn Learning', 'Pluralsight', 'その他'];
-const CATEGORIES = [
-  'プログラミング', 'クラウド', 'セキュリティ', 'データサイエンス', '機械学習',
-  'DevOps', 'データベース', 'ネットワーク', 'プロジェクト管理', 'ビジネス', 'その他'
-];
 const LEVELS = ['入門', '初級', '中級', '上級'];
 const LANGUAGES = ['日本語', '英語', 'その他'];
 
@@ -16,7 +12,6 @@ interface FormState {
   name: string;
   url: string;
   provider: string;
-  category: string;
   duration: string;
   cost: string;
   level: string;
@@ -34,7 +29,6 @@ export default function MaterialFormPage() {
     name: '',
     url: '',
     provider: '',
-    category: '',
     duration: '',
     cost: '',
     level: '',
@@ -58,7 +52,6 @@ export default function MaterialFormPage() {
           name: m.name,
           url: m.url,
           provider: m.provider,
-          category: m.category,
           duration: m.duration?.toString() || '',
           cost: m.cost?.toString() || '',
           level: m.level || '',
@@ -80,7 +73,6 @@ export default function MaterialFormPage() {
       errs.url = 'URLはhttp://またはhttps://で始まる必要があります';
     }
     if (!form.provider.trim()) errs.provider = '提供元は必須です';
-    if (!form.category.trim()) errs.category = 'カテゴリは必須です';
     if (form.duration && isNaN(Number(form.duration))) errs.duration = '数値を入力してください';
     if (form.cost && isNaN(Number(form.cost))) errs.cost = '数値を入力してください';
     setErrors(errs);
@@ -96,7 +88,6 @@ export default function MaterialFormPage() {
         name: form.name.trim(),
         url: form.url.trim(),
         provider: form.provider.trim(),
-        category: form.category.trim(),
         duration: form.duration ? Number(form.duration) : undefined,
         cost: form.cost ? Number(form.cost) : undefined,
         level: form.level || undefined,
@@ -243,36 +234,6 @@ export default function MaterialFormPage() {
             {errors.provider && <p className="text-red-500 text-xs mt-1">{errors.provider}</p>}
           </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              カテゴリ <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 flex-wrap mb-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, category: c }))}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                    form.category === c
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-slate-300 text-slate-600 hover:border-blue-400'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-            <input
-              type="text"
-              value={form.category}
-              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-              placeholder="または直接入力"
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${errors.category ? 'border-red-400' : 'border-slate-300'}`}
-            />
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-          </div>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">

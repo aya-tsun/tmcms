@@ -10,7 +10,6 @@ class MaterialCreate(BaseModel):
     name: str
     url: str
     provider: str
-    category: str
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
@@ -30,7 +29,6 @@ class MaterialUpdate(BaseModel):
     name: Optional[str] = None
     url: Optional[str] = None
     provider: Optional[str] = None
-    category: Optional[str] = None
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
@@ -57,7 +55,6 @@ class MaterialOut(BaseModel):
     name: str
     url: str
     provider: str
-    category: str
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None

@@ -72,7 +72,6 @@ export default function ComparePage() {
       </Link>
     )},
     { label: '提供元', render: (m: Material) => m.provider },
-    { label: 'カテゴリ', render: (m: Material) => m.category },
     { label: '対象レベル', render: (m: Material) => m.level || '-' },
     { label: '言語', render: (m: Material) => m.language || '-' },
     { label: '受講時間', render: (m: Material) => m.duration ? `${m.duration}時間` : '-' },

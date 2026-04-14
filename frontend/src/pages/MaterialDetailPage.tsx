@@ -180,7 +180,6 @@ export default function MaterialDetailPage() {
                 <h1 className="text-2xl font-bold text-slate-800 mb-1">{material.name}</h1>
                 <div className="flex flex-wrap gap-2 text-sm text-slate-500 mb-3">
                   <span className="bg-slate-100 px-2 py-0.5 rounded">{material.provider}</span>
-                  <span className="bg-slate-100 px-2 py-0.5 rounded">{material.category}</span>
                   {material.level && (
                     <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{material.level}</span>
                   )}

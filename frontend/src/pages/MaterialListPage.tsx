@@ -27,7 +27,6 @@ export default function MaterialListPage() {
 
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
-  const [category, setCategory] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [level, setLevel] = useState('');
   const [language, setLanguage] = useState('');
@@ -47,7 +46,6 @@ export default function MaterialListPage() {
       };
       if (search) params.search = search;
       if (provider) params.provider = provider;
-      if (category) params.category = category;
       if (selectedTagIds.length > 0) params.tag_ids = selectedTagIds.join(',');
       if (level) params.level = level;
       if (language) params.language = language;
@@ -60,7 +58,7 @@ export default function MaterialListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, provider, category, selectedTagIds, level, language, sort, page]);
+  }, [search, provider, selectedTagIds, level, language, sort, page]);
 
   useEffect(() => {
     fetchMaterials();
@@ -89,7 +87,6 @@ export default function MaterialListPage() {
     const params: Record<string, string> = {};
     if (search) params.search = search;
     if (provider) params.provider = provider;
-    if (category) params.category = category;
     if (selectedTagIds.length > 0) params.tag_ids = selectedTagIds.join(',');
     if (selected.size > 0) params.material_ids = Array.from(selected).join(',');
 
@@ -116,7 +113,6 @@ export default function MaterialListPage() {
   const resetFilters = () => {
     setSearch('');
     setProvider('');
-    setCategory('');
     setSelectedTagIds([]);
     setLevel('');
     setLanguage('');
@@ -144,13 +140,6 @@ export default function MaterialListPage() {
             placeholder="教材名・提供元で検索"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            placeholder="カテゴリで絞り込み"
-            value={category}
-            onChange={(e) => { setCategory(e.target.value); setPage(0); }}
             className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <select
@@ -271,7 +260,6 @@ export default function MaterialListPage() {
                 </th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700">教材名</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 hidden md:table-cell">提供元</th>
-                <th className="px-3 py-3 text-left font-semibold text-slate-700 hidden md:table-cell">カテゴリ</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 hidden lg:table-cell">タグ</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700">評価</th>
                 <th className="px-3 py-3 text-left font-semibold text-slate-700 hidden lg:table-cell">費用</th>
@@ -310,7 +298,6 @@ export default function MaterialListPage() {
                     )}
                   </td>
                   <td className="px-3 py-3 text-slate-600 hidden md:table-cell">{m.provider}</td>
-                  <td className="px-3 py-3 text-slate-600 hidden md:table-cell">{m.category}</td>
                   <td className="px-3 py-3 hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {m.tags.slice(0, 3).map((t) => (

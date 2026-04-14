@@ -26,7 +26,7 @@ class Material(Base):
     name = Column(String(255), nullable=False, index=True)
     url = Column(String(2048), nullable=False)
     provider = Column(String(100), nullable=False)
-    category = Column(String(100), nullable=False)
+    category = Column(String(100), nullable=True)
     duration = Column(Float, nullable=True)  # hours
     cost = Column(Float, nullable=True)  # yen per license
     level = Column(Enum(MaterialLevel), nullable=True)
