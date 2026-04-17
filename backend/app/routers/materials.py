@@ -26,11 +26,11 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
         name=material.name,
         url=material.url,
         provider=material.provider,
-        category=material.category,
         duration=material.duration,
         cost=material.cost,
         level=material.level,
         language=material.language,
+        description=material.description,
         created_at=material.created_at,
         created_by=material.created_by,
         creator_name=creator_name,
@@ -111,7 +111,6 @@ def create_material(
         name=data.name,
         url=data.url,
         provider=data.provider,
-        category=data.category,
         duration=data.duration,
         cost=data.cost,
         level=data.level,
@@ -161,8 +160,6 @@ def update_material(
         material.url = data.url
     if data.provider is not None:
         material.provider = data.provider
-    if data.category is not None:
-        material.category = data.category
     if data.duration is not None:
         material.duration = data.duration
     if data.cost is not None:
