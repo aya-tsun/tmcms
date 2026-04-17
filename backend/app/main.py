@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 import os
+import logging
+import traceback
+
+logger = logging.getLogger(__name__)
 
 from .database import engine, Base
 from .models import User, Material, Tag, MaterialTag, Evaluation, CustomEvaluationAxis, Memo
@@ -29,6 +34,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    messages = []
+    for err in errors:
+        field = " → ".join(str(x) for x in err.get("loc", []) if x != "body")
+        msg = err.get("msg", "")
+        messages.append(f"{field}: {msg}" if field else msg)
+    detail = "入力値が正しくありません: " + "、".join(messages)
+    return JSONResponse(status_code=422, content={"detail": detail})
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    logger.error(f"Unhandled exception on {request.method} {request.url}: {exc}\n{tb}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"サーバーエラーが発生しました ({type(exc).__name__}: {exc})"},
+    )
+
 
 app.include_router(auth.router)
 app.include_router(users.router)

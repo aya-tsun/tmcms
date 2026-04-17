@@ -8,6 +8,7 @@ import TagManagePage from './pages/TagManagePage';
 import UserManagePage from './pages/UserManagePage';
 import SettingsPage from './pages/SettingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import ToastContainer from './components/Toast';
 import { useAuthStore } from './store/auth';
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -20,6 +21,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<ProtectedRoute><MaterialListPage /></ProtectedRoute>} />
