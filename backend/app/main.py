@@ -19,6 +19,34 @@ from .models.user import UserRole
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
+
+def run_migrations():
+    """Apply any schema changes that create_all won't handle on existing tables."""
+    from sqlalchemy import text, inspect
+    db = SessionLocal()
+    try:
+        insp = inspect(engine)
+        if 'materials' not in insp.get_table_names():
+            return
+        cols = {c['name']: c for c in insp.get_columns('materials')}
+        # Make category nullable if it still has NOT NULL constraint
+        if 'category' in cols and not cols['category']['nullable']:
+            if engine.dialect.name == 'postgresql':
+                db.execute(text('ALTER TABLE materials ALTER COLUMN category DROP NOT NULL'))
+            # SQLite: recreating column not supported; set a default so inserts won't fail
+            elif engine.dialect.name == 'sqlite':
+                db.execute(text("UPDATE materials SET category = '' WHERE category IS NULL"))
+            db.commit()
+            print("Migration: materials.category is now nullable")
+    except Exception as e:
+        print(f"Migration warning: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+run_migrations()
+
 app = FastAPI(title="TMCMS API", version="1.0.0")
 
 ALLOWED_ORIGINS = os.environ.get(
