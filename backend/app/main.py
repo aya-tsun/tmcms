@@ -10,8 +10,8 @@ import traceback
 logger = logging.getLogger(__name__)
 
 from .database import engine, Base
-from .models import User, Material, Tag, MaterialTag, Evaluation, CustomEvaluationAxis, Memo
-from .routers import auth, users, materials, tags, evaluations, memos, export
+from .models import User, Material, Tag, MaterialTag, Evaluation, CustomEvaluationAxis, Memo, LearningTopic, MaterialLearningTopic
+from .routers import auth, users, materials, tags, evaluations, memos, export, learning_topics
 from .auth.jwt import hash_password
 from .database import SessionLocal
 from .models.user import UserRole
@@ -33,11 +33,25 @@ def run_migrations():
         if 'category' in cols and not cols['category']['nullable']:
             if engine.dialect.name == 'postgresql':
                 db.execute(text('ALTER TABLE materials ALTER COLUMN category DROP NOT NULL'))
-            # SQLite: recreating column not supported; set a default so inserts won't fail
             elif engine.dialect.name == 'sqlite':
                 db.execute(text("UPDATE materials SET category = '' WHERE category IS NULL"))
             db.commit()
             print("Migration: materials.category is now nullable")
+
+        # Add provider_category column if missing
+        if 'provider_category' not in cols:
+            db.execute(text('ALTER TABLE materials ADD COLUMN provider_category VARCHAR(50)'))
+            db.commit()
+            print("Migration: added materials.provider_category")
+
+        # Add delivery_methods column if missing
+        if 'delivery_methods' not in cols:
+            if engine.dialect.name == 'postgresql':
+                db.execute(text('ALTER TABLE materials ADD COLUMN delivery_methods TEXT'))
+            else:
+                db.execute(text('ALTER TABLE materials ADD COLUMN delivery_methods TEXT'))
+            db.commit()
+            print("Migration: added materials.delivery_methods")
     except Exception as e:
         print(f"Migration warning: {e}")
         db.rollback()
@@ -92,6 +106,7 @@ app.include_router(tags.router)
 app.include_router(evaluations.router)
 app.include_router(memos.router)
 app.include_router(export.router)
+app.include_router(learning_topics.router)
 
 
 def create_initial_admin():

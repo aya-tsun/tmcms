@@ -1,19 +1,19 @@
-from pydantic import BaseModel, HttpUrl, field_validator
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional, List
 from ..models.material import MaterialLevel, MaterialLanguage
-from .tag import TagOut
-from .evaluation import EvaluationOut
 
 
 class MaterialCreate(BaseModel):
     name: str
     url: str
     provider: str
+    provider_category: Optional[str] = None
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
     tag_ids: List[int] = []
 
@@ -29,10 +29,12 @@ class MaterialUpdate(BaseModel):
     name: Optional[str] = None
     url: Optional[str] = None
     provider: Optional[str] = None
+    provider_category: Optional[str] = None
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
     tag_ids: Optional[List[int]] = None
 
@@ -50,20 +52,29 @@ class TagSimple(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LearningTopicSimple(BaseModel):
+    id: int
+    name: str
+    model_config = {"from_attributes": True}
+
+
 class MaterialOut(BaseModel):
     id: int
     name: str
     url: str
     provider: str
+    provider_category: Optional[str] = None
     duration: Optional[float] = None
     cost: Optional[float] = None
     level: Optional[MaterialLevel] = None
     language: Optional[MaterialLanguage] = None
+    delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
     created_at: datetime
     created_by: Optional[int] = None
     creator_name: Optional[str] = None
     tags: List[TagSimple] = []
+    learning_topics: List[LearningTopicSimple] = []
     overall_score: Optional[float] = None
     evaluation_count: int = 0
 
@@ -73,3 +84,11 @@ class MaterialOut(BaseModel):
 class MaterialListOut(BaseModel):
     items: List[MaterialOut]
     total: int
+
+
+class LearningTopicOut(BaseModel):
+    id: int
+    name: str
+    order: int
+    created_at: datetime
+    model_config = {"from_attributes": True}

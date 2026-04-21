@@ -4,18 +4,38 @@ import { materialsApi, tagsApi } from '../api';
 import type { Tag } from '../types';
 import Layout from '../components/Layout';
 
-const PROVIDERS = ['Udemy', 'Coursera', '自社', 'LinkedIn Learning', 'Pluralsight', 'その他'];
+const PROVIDER_CATEGORIES = [
+  '企業・教育事業会社',
+  '教育機関',
+  '外部プラットフォーム',
+  '自社',
+  '個人・コミュニティ',
+  'その他',
+];
+const PROVIDERS = ['Udemy', 'Coursera', 'LinkedIn Learning', 'Pluralsight', 'YouTube'];
 const LEVELS = ['入門', '初級', '中級', '上級'];
 const LANGUAGES = ['日本語', '英語', 'その他'];
+const DELIVERY_METHODS = [
+  'eラーニング',
+  '書籍',
+  '動画（録画）',
+  'ハンズオン',
+  '集合研修',
+  'YouTube・SNS',
+  'ブログ・記事',
+  '資格試験',
+];
 
 interface FormState {
   name: string;
   url: string;
   provider: string;
+  provider_category: string;
   duration: string;
   cost: string;
   level: string;
   language: string;
+  delivery_methods: string[];
   description: string;
   tag_ids: number[];
 }
@@ -29,10 +49,12 @@ export default function MaterialFormPage() {
     name: '',
     url: '',
     provider: '',
+    provider_category: '',
     duration: '',
     cost: '',
     level: '',
     language: '',
+    delivery_methods: [],
     description: '',
     tag_ids: [],
   });
@@ -52,10 +74,12 @@ export default function MaterialFormPage() {
           name: m.name,
           url: m.url,
           provider: m.provider,
+          provider_category: m.provider_category || '',
           duration: m.duration?.toString() || '',
           cost: m.cost?.toString() || '',
           level: m.level || '',
           language: m.language || '',
+          delivery_methods: m.delivery_methods || [],
           description: m.description || '',
           tag_ids: m.tags.map((t) => t.id),
         });
@@ -88,10 +112,12 @@ export default function MaterialFormPage() {
         name: form.name.trim(),
         url: form.url.trim(),
         provider: form.provider.trim(),
+        provider_category: form.provider_category || undefined,
         duration: form.duration ? Number(form.duration) : undefined,
         cost: form.cost ? Number(form.cost) : undefined,
         level: form.level || undefined,
         language: form.language || undefined,
+        delivery_methods: form.delivery_methods.length > 0 ? form.delivery_methods : undefined,
         description: form.description.trim() || undefined,
         tag_ids: form.tag_ids,
       };
@@ -133,6 +159,15 @@ export default function MaterialFormPage() {
     }));
   };
 
+  const toggleDelivery = (method: string) => {
+    setForm((f) => ({
+      ...f,
+      delivery_methods: f.delivery_methods.includes(method)
+        ? f.delivery_methods.filter((x) => x !== method)
+        : [...f.delivery_methods, method],
+    }));
+  };
+
   const field = (key: keyof FormState) => ({
     value: form[key] as string,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -144,6 +179,13 @@ export default function MaterialFormPage() {
       hasError
         ? 'border-red-300 focus:ring-red-200'
         : 'border-purple-100 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30'
+    }`;
+
+  const chipClass = (active: boolean) =>
+    `text-sm px-4 py-1.5 rounded-full border-2 transition-all font-medium cursor-pointer ${
+      active
+        ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
+        : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
     }`;
 
   if (loading) {
@@ -179,184 +221,161 @@ export default function MaterialFormPage() {
           </div>
         )}
 
+        {/* 基本情報 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4">
           <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2">基本情報</h2>
 
-          {/* Name */}
           <div>
             <label className="block text-sm font-semibold text-purple-700 mb-1.5">
               教材名 <span className="text-red-400">*</span>
             </label>
-            <input
-              type="text"
-              {...field('name')}
-              placeholder="例: Python入門コース"
-              className={inputClass(!!errors.name)}
-            />
+            <input type="text" {...field('name')} placeholder="例: Python入門コース"
+              className={inputClass(!!errors.name)} />
             {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
           </div>
 
-          {/* URL */}
           <div>
             <label className="block text-sm font-semibold text-purple-700 mb-1.5">
               URL <span className="text-red-400">*</span>
             </label>
-            <input
-              type="url"
-              {...field('url')}
-              placeholder="https://www.udemy.com/course/..."
-              className={inputClass(!!errors.url)}
-            />
+            <input type="url" {...field('url')} placeholder="https://..."
+              className={inputClass(!!errors.url)} />
             {errors.url && <p className="text-red-400 text-xs mt-1">{errors.url}</p>}
           </div>
 
-          {/* Provider */}
+          {/* 提供元カテゴリ */}
+          <div>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">提供元の分類</label>
+            <div className="flex gap-2 flex-wrap">
+              {PROVIDER_CATEGORIES.map((c) => (
+                <button key={c} type="button"
+                  onClick={() => setForm((f) => ({ ...f, provider_category: f.provider_category === c ? '' : c }))}
+                  className={chipClass(form.provider_category === c)}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 提供元 */}
           <div>
             <label className="block text-sm font-semibold text-purple-700 mb-1.5">
               提供元 <span className="text-red-400">*</span>
             </label>
             <div className="flex gap-2 flex-wrap mb-2">
               {PROVIDERS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
+                <button key={p} type="button"
                   onClick={() => setForm((f) => ({ ...f, provider: p }))}
-                  className={`text-sm px-4 py-1.5 rounded-full border-2 transition-all font-medium ${
-                    form.provider === p
-                      ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
-                      : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
-                  }`}
-                >
+                  className={chipClass(form.provider === p)}>
                   {p}
                 </button>
               ))}
             </div>
-            <input
-              type="text"
-              value={form.provider}
+            <input type="text" value={form.provider}
               onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
               placeholder="または直接入力"
-              className={inputClass(!!errors.provider)}
-            />
+              className={inputClass(!!errors.provider)} />
             {errors.provider && <p className="text-red-400 text-xs mt-1">{errors.provider}</p>}
           </div>
         </div>
 
+        {/* 詳細情報 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4">
           <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2">詳細情報（任意）</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-purple-700 mb-1.5">受講時間（時間）</label>
-              <input
-                type="number"
-                min="0"
-                step="0.5"
-                {...field('duration')}
-                placeholder="例: 10.5"
-                className={inputClass(!!errors.duration)}
-              />
+              <input type="number" min="0" step="0.5" {...field('duration')} placeholder="例: 10.5"
+                className={inputClass(!!errors.duration)} />
               {errors.duration && <p className="text-red-400 text-xs mt-1">{errors.duration}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold text-purple-700 mb-1.5">費用（円/ライセンス）</label>
-              <input
-                type="number"
-                min="0"
-                {...field('cost')}
-                placeholder="例: 3000"
-                className={inputClass(!!errors.cost)}
-              />
+              <input type="number" min="0" {...field('cost')} placeholder="例: 3000"
+                className={inputClass(!!errors.cost)} />
               {errors.cost && <p className="text-red-400 text-xs mt-1">{errors.cost}</p>}
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-purple-700 mb-1.5">説明・備考</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={4}
-              placeholder="教材の概要、特徴、社内での利用実績など自由に記入してください"
-              className="w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 resize-y transition-all"
-            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-purple-700 mb-1.5">対象レベル</label>
-              <select
-                {...field('level')}
-                className={inputClass()}
-              >
+              <select {...field('level')} className={inputClass()}>
                 <option value="">選択してください</option>
                 {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-purple-700 mb-1.5">言語</label>
-              <select
-                {...field('language')}
-                className={inputClass()}
-              >
+              <select {...field('language')} className={inputClass()}>
                 <option value="">選択してください</option>
                 {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
           </div>
+
+          {/* 提供方法 */}
+          <div>
+            <label className="block text-sm font-semibold text-purple-700 mb-2">提供方法（複数選択可）</label>
+            <div className="flex gap-2 flex-wrap">
+              {DELIVERY_METHODS.map((m) => (
+                <button key={m} type="button" onClick={() => toggleDelivery(m)}
+                  className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
+                    form.delivery_methods.includes(m)
+                      ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
+                      : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
+                  }`}>
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">説明・備考</label>
+            <textarea value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={4} placeholder="教材の概要、特徴、社内での利用実績など"
+              className="w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 resize-y transition-all" />
+          </div>
         </div>
 
-        {/* Tags */}
+        {/* タグ */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 shadow-sm p-6">
           <h2 className="font-semibold text-purple-700 border-b border-purple-50 pb-2 mb-4">タグ</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {allTags.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => toggleTag(t.id)}
+              <button key={t.id} type="button" onClick={() => toggleTag(t.id)}
                 className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
                   form.tag_ids.includes(t.id)
                     ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
                     : 'border-purple-200 text-purple-600 hover:border-violet-400 hover:bg-violet-50'
-                }`}
-              >
+                }`}>
                 {t.name}
               </button>
             ))}
           </div>
           <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
+            <input type="text" value={newTagName} onChange={(e) => setNewTagName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
               placeholder="新しいタグを追加"
-              className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 transition-all"
-            />
-            <button
-              type="button"
-              onClick={handleAddTag}
-              className="border-2 border-purple-200 px-4 py-2 rounded-xl text-sm text-purple-600 hover:bg-violet-50 hover:border-violet-400 transition-all font-medium"
-            >
+              className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 transition-all" />
+            <button type="button" onClick={handleAddTag}
+              className="border-2 border-purple-200 px-4 py-2 rounded-xl text-sm text-purple-600 hover:bg-violet-50 hover:border-violet-400 transition-all font-medium">
               追加
             </button>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
+          <button type="submit" disabled={saving}
             className="text-white px-7 py-2.5 rounded-2xl font-semibold disabled:opacity-60 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
-          >
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}>
             {saving ? '保存中...' : isEdit ? '更新する' : '登録する'}
           </button>
-          <Link
-            to={isEdit ? `/materials/${id}` : '/'}
-            className="border-2 border-purple-200 text-purple-600 px-7 py-2.5 rounded-2xl font-semibold hover:bg-purple-50 transition-all"
-          >
+          <Link to={isEdit ? `/materials/${id}` : '/'}
+            className="border-2 border-purple-200 text-purple-600 px-7 py-2.5 rounded-2xl font-semibold hover:bg-purple-50 transition-all">
             キャンセル
           </Link>
         </div>

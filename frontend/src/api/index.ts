@@ -1,6 +1,6 @@
 import client from './client';
 import type {
-  User, Material, MaterialListOut, Tag, Evaluation, CustomAxis, Memo, MaterialFilters,
+  User, Material, MaterialListOut, Tag, Evaluation, CustomAxis, Memo, MaterialFilters, LearningTopic,
 } from '../types';
 
 // Auth
@@ -60,6 +60,15 @@ export const usersApi = {
   create: (data: object) => client.post<User>('/users', data),
   update: (id: number, data: object) => client.put<User>(`/users/${id}`, data),
   delete: (id: number) => client.delete(`/users/${id}`),
+};
+
+// Learning Topics
+export const learningTopicsApi = {
+  list: () => client.get<LearningTopic[]>('/learning-topics'),
+  create: (name: string) => client.post<LearningTopic>('/learning-topics', { name }),
+  delete: (id: number) => client.delete(`/learning-topics/${id}`),
+  toggle: (materialId: number, topicId: number, checked: boolean) =>
+    client.post(`/learning-topics/materials/${materialId}/toggle`, { topic_id: topicId, checked }),
 };
 
 // Export

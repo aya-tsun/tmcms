@@ -24,20 +24,35 @@ export interface TagSimple {
   name: string;
 }
 
+export interface LearningTopic {
+  id: number;
+  name: string;
+  order: number;
+  created_at: string;
+}
+
+export interface LearningTopicSimple {
+  id: number;
+  name: string;
+}
+
 export interface Material {
   id: number;
   name: string;
   url: string;
   provider: string;
+  provider_category?: string;
   duration?: number;
   cost?: number;
   level?: MaterialLevel;
   language?: MaterialLanguage;
+  delivery_methods?: string[];
   description?: string;
   created_at: string;
   created_by?: number;
   creator_name?: string;
   tags: TagSimple[];
+  learning_topics: LearningTopicSimple[];
   overall_score?: number;
   evaluation_count: number;
 }

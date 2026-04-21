@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 
 from ..database import get_db
 from ..models.user import User
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/materials", tags=["materials"])
 
 def _build_material_out(material: Material, db: Session) -> MaterialOut:
     tags = [mt.tag for mt in material.material_tags]
+    learning_topics = [mt.topic for mt in material.material_learning_topics]
     evaluations = material.evaluations
     overall_score = None
     if evaluations:
@@ -26,15 +27,18 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
         name=material.name,
         url=material.url,
         provider=material.provider,
+        provider_category=material.provider_category,
         duration=material.duration,
         cost=material.cost,
         level=material.level,
         language=material.language,
+        delivery_methods=material.delivery_methods or [],
         description=material.description,
         created_at=material.created_at,
         created_by=material.created_by,
         creator_name=creator_name,
         tags=[{"id": t.id, "name": t.name} for t in tags],
+        learning_topics=[{"id": t.id, "name": t.name} for t in learning_topics],
         overall_score=round(overall_score, 2) if overall_score is not None else None,
         evaluation_count=len(evaluations),
     )
@@ -44,8 +48,7 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
 def list_materials(
     search: Optional[str] = Query(None),
     provider: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    tag_ids: Optional[str] = Query(None),  # comma-separated
+    tag_ids: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
     sort_by: str = Query("created_at"),
@@ -66,8 +69,6 @@ def list_materials(
         )
     if provider:
         query = query.filter(Material.provider.ilike(f"%{provider}%"))
-    if category:
-        query = query.filter(Material.category.ilike(f"%{category}%"))
     if level:
         query = query.filter(Material.level == level)
     if language:
@@ -84,19 +85,13 @@ def list_materials(
 
     total = query.count()
     materials = query.offset(skip).limit(limit).all()
-
     items = [_build_material_out(m, db) for m in materials]
 
-    # Sort by overall_score if needed (post-query since it's computed)
     if sort_by == "overall_score":
         reverse = sort_order == "desc"
         items.sort(key=lambda x: (x.overall_score is not None, x.overall_score or 0), reverse=reverse)
     elif sort_by == "name":
-        reverse = sort_order == "desc"
-        items.sort(key=lambda x: x.name, reverse=reverse)
-    else:
-        # created_at handled by DB
-        pass
+        items.sort(key=lambda x: x.name, reverse=(sort_order == "desc"))
 
     return MaterialListOut(items=items, total=total)
 
@@ -111,10 +106,12 @@ def create_material(
         name=data.name,
         url=data.url,
         provider=data.provider,
+        provider_category=data.provider_category,
         duration=data.duration,
         cost=data.cost,
         level=data.level,
         language=data.language,
+        delivery_methods=data.delivery_methods,
         description=data.description,
         created_by=current_user.id,
     )
@@ -160,6 +157,8 @@ def update_material(
         material.url = data.url
     if data.provider is not None:
         material.provider = data.provider
+    if data.provider_category is not None:
+        material.provider_category = data.provider_category
     if data.duration is not None:
         material.duration = data.duration
     if data.cost is not None:
@@ -168,6 +167,8 @@ def update_material(
         material.level = data.level
     if data.language is not None:
         material.language = data.language
+    if data.delivery_methods is not None:
+        material.delivery_methods = data.delivery_methods
     if data.description is not None:
         material.description = data.description
 

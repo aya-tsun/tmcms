@@ -71,11 +71,30 @@ export default function ComparePage() {
         {m.name}
       </Link>
     )},
+    { label: '提供元分類', render: (m: Material) => m.provider_category || '-' },
     { label: '提供元', render: (m: Material) => m.provider },
     { label: '対象レベル', render: (m: Material) => m.level || '-' },
     { label: '言語', render: (m: Material) => m.language || '-' },
     { label: '受講時間', render: (m: Material) => m.duration ? `${m.duration}時間` : '-' },
     { label: '費用', render: (m: Material) => m.cost != null ? `¥${m.cost.toLocaleString()}` : '-' },
+    { label: '提供方法', render: (m: Material) => (
+      <div className="flex flex-wrap gap-1">
+        {m.delivery_methods && m.delivery_methods.length > 0
+          ? m.delivery_methods.map((d) => (
+              <span key={d} className="text-xs bg-sky-50 text-sky-600 px-2 py-0.5 rounded-full border border-sky-100">{d}</span>
+            ))
+          : '-'}
+      </div>
+    )},
+    { label: '学習項目', render: (m: Material) => (
+      <div className="flex flex-wrap gap-1">
+        {m.learning_topics.length > 0
+          ? m.learning_topics.map((t) => (
+              <span key={t.id} className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100">{t.name}</span>
+            ))
+          : '-'}
+      </div>
+    )},
     { label: 'タグ', render: (m: Material) => (
       <div className="flex flex-wrap gap-1">
         {m.tags.length > 0

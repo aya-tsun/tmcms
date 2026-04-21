@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { materialsApi, evaluationsApi, memosApi, axesApi } from '../api';
-import type { Material, Evaluation, Memo, CustomAxis } from '../types';
+import { materialsApi, evaluationsApi, memosApi, axesApi, learningTopicsApi } from '../api';
+import type { Material, Evaluation, Memo, CustomAxis, LearningTopic } from '../types';
 import StarRating from '../components/StarRating';
 import Layout from '../components/Layout';
 import { useAuthStore } from '../store/auth';
@@ -16,6 +16,8 @@ export default function MaterialDetailPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [memos, setMemos] = useState<Memo[]>([]);
   const [axes, setAxes] = useState<CustomAxis[]>([]);
+  const [allTopics, setAllTopics] = useState<LearningTopic[]>([]);
+  const [newTopicName, setNewTopicName] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Evaluation form
@@ -40,16 +42,18 @@ export default function MaterialDetailPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const [mRes, eRes, memoRes, axesRes] = await Promise.all([
+        const [mRes, eRes, memoRes, axesRes, topicsRes] = await Promise.all([
           materialsApi.get(materialId),
           evaluationsApi.list(materialId),
           memosApi.list(materialId),
           axesApi.list(),
+          learningTopicsApi.list(),
         ]);
         setMaterial(mRes.data);
         setEvaluations(eRes.data);
         setMemos(memoRes.data);
         setAxes(axesRes.data);
+        setAllTopics(topicsRes.data);
 
         const myE = eRes.data.find((e) => e.user_id === user?.id);
         if (myE) {
@@ -137,6 +141,29 @@ export default function MaterialDetailPage() {
     setMemos((prev) => prev.filter((m) => m.id !== memoId));
   };
 
+  const handleToggleTopic = async (topicId: number, checked: boolean) => {
+    await learningTopicsApi.toggle(materialId, topicId, checked);
+    setMaterial((prev) => {
+      if (!prev) return prev;
+      const topics = checked
+        ? [...prev.learning_topics, { id: topicId, name: allTopics.find((t) => t.id === topicId)?.name || '' }]
+        : prev.learning_topics.filter((t) => t.id !== topicId);
+      return { ...prev, learning_topics: topics };
+    });
+  };
+
+  const handleAddTopic = async () => {
+    if (!newTopicName.trim()) return;
+    try {
+      const res = await learningTopicsApi.create(newTopicName.trim());
+      setAllTopics((prev) => [...prev, res.data]);
+      setNewTopicName('');
+      await handleToggleTopic(res.data.id, true);
+    } catch {
+      // error shown via toast
+    }
+  };
+
   const avgScore = (field: keyof Evaluation) => {
     const vals = evaluations.map((e) => e[field] as number).filter(Boolean);
     if (!vals.length) return null;
@@ -179,6 +206,9 @@ export default function MaterialDetailPage() {
               <div className="flex-1">
                 <h1 className="text-2xl font-bold mb-2" style={{ color: '#2e1065' }}>{material.name}</h1>
                 <div className="flex flex-wrap gap-2 text-sm mb-3">
+                  {material.provider_category && (
+                    <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full border border-amber-100 text-xs font-medium">{material.provider_category}</span>
+                  )}
                   <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full border border-purple-100 text-xs font-medium">{material.provider}</span>
                   {material.level && (
                     <span className="bg-violet-50 text-violet-600 px-3 py-1 rounded-full border border-violet-100 text-xs font-medium">{material.level}</span>
@@ -187,6 +217,13 @@ export default function MaterialDetailPage() {
                     <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full border border-emerald-100 text-xs font-medium">{material.language}</span>
                   )}
                 </div>
+                {material.delivery_methods && material.delivery_methods.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {material.delivery_methods.map((m) => (
+                      <span key={m} className="bg-sky-50 text-sky-600 text-xs px-2.5 py-0.5 rounded-full border border-sky-100 font-medium">{m}</span>
+                    ))}
+                  </div>
+                )}
                 <a
                   href={material.url}
                   target="_blank"
@@ -255,6 +292,54 @@ export default function MaterialDetailPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Learning Topics */}
+          <div className={cardClass}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: '#4c1d95' }}>学習項目</h2>
+            <p className="text-xs text-purple-300 mb-4">この教材でカバーされる学習項目をチェックしてください</p>
+            {allTopics.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                {allTopics.map((topic) => {
+                  const checked = material.learning_topics.some((t) => t.id === topic.id);
+                  return (
+                    <label key={topic.id}
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${
+                        checked
+                          ? 'border-violet-300 bg-violet-50'
+                          : 'border-purple-100 hover:border-violet-200 hover:bg-purple-50/40'
+                      }`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => handleToggleTopic(topic.id, e.target.checked)}
+                        className="w-4 h-4 accent-violet-600 flex-shrink-0"
+                      />
+                      <span className={`text-sm font-medium ${checked ? 'text-violet-700' : 'text-slate-600'}`}>
+                        {topic.name}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTopicName}
+                onChange={(e) => setNewTopicName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTopic())}
+                placeholder="新しい学習項目を追加（例: サーバー、プログラミング）"
+                className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 transition-all"
+              />
+              <button
+                onClick={handleAddTopic}
+                disabled={!newTopicName.trim()}
+                className="border-2 border-purple-200 px-4 py-2 rounded-xl text-sm text-purple-600 hover:bg-violet-50 hover:border-violet-400 transition-all font-medium disabled:opacity-40"
+              >
+                追加
+              </button>
+            </div>
           </div>
 
           {/* Evaluation summary */}
