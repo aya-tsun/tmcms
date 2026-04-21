@@ -17,6 +17,9 @@ const SORT_OPTIONS = [
   { value: 'name|desc', label: '教材名 (Z-A)' },
 ];
 
+type ColumnView = '提供元' | '学習項目' | 'タグ' | '費用' | '評価';
+const COLUMN_VIEWS: ColumnView[] = ['提供元', '学習項目', 'タグ', '費用', '評価'];
+
 export default function MaterialListPage() {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -25,6 +28,7 @@ export default function MaterialListPage() {
   const [allTopics, setAllTopics] = useState<LearningTopic[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [columnView, setColumnView] = useState<ColumnView>('学習項目');
 
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
@@ -123,8 +127,69 @@ export default function MaterialListPage() {
   };
 
   const inputClass = "border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 bg-white transition-all";
+  const hasActiveFilters = !!(search || provider || selectedTagIds.length > 0 || selectedTopicIds.length > 0 || level || language);
 
-  const hasActiveFilters = search || provider || selectedTagIds.length > 0 || selectedTopicIds.length > 0 || level || language;
+  const renderCell = (m: Material) => {
+    switch (columnView) {
+      case '提供元':
+        return (
+          <div>
+            <span className="text-slate-700 font-medium">{m.provider}</span>
+            {m.provider_category && (
+              <span className="ml-2 text-xs text-amber-500">{m.provider_category}</span>
+            )}
+            {m.delivery_methods && m.delivery_methods.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {m.delivery_methods.map((d) => (
+                  <span key={d} className="text-xs bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded-full border border-sky-100">{d}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case '学習項目':
+        return (
+          <div className="flex flex-wrap gap-1">
+            {m.learning_topics.length > 0
+              ? m.learning_topics.map((t) => (
+                  <span key={t.id} className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                    selectedTopicIds.includes(t.id)
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                  }`}>{t.name}</span>
+                ))
+              : <span className="text-xs text-purple-200">—</span>
+            }
+          </div>
+        );
+      case 'タグ':
+        return (
+          <div className="flex flex-wrap gap-1">
+            {m.tags.length > 0
+              ? m.tags.map((t) => (
+                  <span key={t.id} className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100">{t.name}</span>
+                ))
+              : <span className="text-xs text-purple-200">—</span>
+            }
+          </div>
+        );
+      case '費用':
+        return (
+          <span className="text-slate-700 font-medium">
+            {m.cost !== null && m.cost !== undefined ? `¥${m.cost.toLocaleString()}` : '—'}
+          </span>
+        );
+      case '評価':
+        return m.overall_score !== null && m.overall_score !== undefined ? (
+          <div className="flex items-center gap-1">
+            <StarRating value={Math.round(m.overall_score)} readonly size="sm" />
+            <span className="text-xs text-slate-500">{m.overall_score.toFixed(1)}</span>
+          </div>
+        ) : (
+          <span className="text-xs text-purple-300">未評価</span>
+        );
+    }
+  };
 
   return (
     <Layout>
@@ -184,20 +249,9 @@ export default function MaterialListPage() {
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-purple-400 font-medium">タグ:</span>
             {tags.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setSelectedTagIds((prev) =>
-                    prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id]
-                  );
-                  setPage(0);
-                }}
-                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
-                  selectedTagIds.includes(t.id)
-                    ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
-                    : 'bg-white text-violet-600 border-violet-200 hover:border-violet-400'
-                }`}
-              >
+              <button key={t.id}
+                onClick={() => { setSelectedTagIds((prev) => prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id]); setPage(0); }}
+                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${selectedTagIds.includes(t.id) ? 'bg-violet-500 text-white border-violet-500 shadow-sm' : 'bg-white text-violet-600 border-violet-200 hover:border-violet-400'}`}>
                 {t.name}
               </button>
             ))}
@@ -209,20 +263,9 @@ export default function MaterialListPage() {
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-purple-400 font-medium">学習項目:</span>
             {allTopics.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setSelectedTopicIds((prev) =>
-                    prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id]
-                  );
-                  setPage(0);
-                }}
-                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
-                  selectedTopicIds.includes(t.id)
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                    : 'bg-white text-emerald-700 border-emerald-200 hover:border-emerald-400'
-                }`}
-              >
+              <button key={t.id}
+                onClick={() => { setSelectedTopicIds((prev) => prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id]); setPage(0); }}
+                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${selectedTopicIds.includes(t.id) ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-emerald-700 border-emerald-200 hover:border-emerald-400'}`}>
                 {t.name}
               </button>
             ))}
@@ -230,20 +273,34 @@ export default function MaterialListPage() {
         )}
       </div>
 
-      {/* Action bar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-purple-400">
+      {/* Action bar + column switcher */}
+      <div className="flex items-center justify-between mb-3 gap-4">
+        <div className="text-sm text-purple-400 shrink-0">
           全 {total} 件
-          {selected.size > 0 && (
-            <span className="ml-2 text-violet-600 font-semibold">{selected.size} 件選択中</span>
-          )}
+          {selected.size > 0 && <span className="ml-2 text-violet-600 font-semibold">{selected.size} 件選択中</span>}
         </div>
-        <div className="flex gap-2">
-          {selected.size >= 2 && (
+
+        {/* Column view switcher */}
+        <div className="flex items-center gap-1.5 bg-purple-50 rounded-xl p-1">
+          <span className="text-xs text-purple-400 pl-1.5 pr-0.5 font-medium shrink-0">表示:</span>
+          {COLUMN_VIEWS.map((v) => (
             <button
-              onClick={handleCompare}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md"
+              key={v}
+              onClick={() => setColumnView(v)}
+              className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                columnView === v
+                  ? 'bg-white text-violet-700 shadow-sm'
+                  : 'text-purple-400 hover:text-purple-600'
+              }`}
             >
+              {v}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 shrink-0">
+          {selected.size >= 2 && (
+            <button onClick={handleCompare} className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md">
               比較 ({selected.size})
             </button>
           )}
@@ -271,20 +328,13 @@ export default function MaterialListPage() {
               <tr>
                 <th className="w-10 px-3 py-3.5 text-left"><span className="sr-only">選択</span></th>
                 <th className="px-3 py-3.5 text-left font-semibold text-purple-700">教材名</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden md:table-cell">提供元</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden lg:table-cell">学習項目</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden xl:table-cell">タグ</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700">評価</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden lg:table-cell">費用</th>
+                <th className="px-3 py-3.5 text-left font-semibold text-purple-700">{columnView}</th>
                 <th className="px-3 py-3.5 text-right font-semibold text-purple-700">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-50">
               {materials.map((m) => (
-                <tr
-                  key={m.id}
-                  className={`hover:bg-violet-50/50 transition-colors ${selected.has(m.id) ? 'bg-violet-50' : ''}`}
-                >
+                <tr key={m.id} className={`hover:bg-violet-50/50 transition-colors ${selected.has(m.id) ? 'bg-violet-50' : ''}`}>
                   <td className="px-3 py-3.5">
                     <input
                       type="checkbox"
@@ -298,61 +348,17 @@ export default function MaterialListPage() {
                     <Link to={`/materials/${m.id}`} className="font-semibold text-violet-700 hover:text-violet-900 hover:underline">
                       {m.name}
                     </Link>
-                    {m.level && (
-                      <span className="ml-2 text-xs bg-violet-50 text-violet-500 px-2 py-0.5 rounded-full border border-violet-100">
-                        {m.level}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3.5 text-slate-600 hidden md:table-cell">
-                    <div>{m.provider}</div>
-                    {m.provider_category && (
-                      <div className="text-xs text-amber-500 mt-0.5">{m.provider_category}</div>
-                    )}
-                  </td>
-                  {/* 学習項目 */}
-                  <td className="px-3 py-3.5 hidden lg:table-cell">
-                    <div className="flex flex-wrap gap-1">
-                      {m.learning_topics.length > 0
-                        ? m.learning_topics.map((t) => (
-                            <span
-                              key={t.id}
-                              className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
-                                selectedTopicIds.includes(t.id)
-                                  ? 'bg-emerald-500 text-white border-emerald-500'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                              }`}
-                            >
-                              {t.name}
-                            </span>
-                          ))
-                        : <span className="text-xs text-purple-200">—</span>
-                      }
-                    </div>
-                  </td>
-                  {/* タグ */}
-                  <td className="px-3 py-3.5 hidden xl:table-cell">
-                    <div className="flex flex-wrap gap-1">
-                      {m.tags.slice(0, 3).map((t) => (
-                        <span key={t.id} className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100">
-                          {t.name}
-                        </span>
-                      ))}
-                      {m.tags.length > 3 && <span className="text-xs text-purple-300">+{m.tags.length - 3}</span>}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {m.level && (
+                        <span className="text-xs bg-violet-50 text-violet-500 px-2 py-0.5 rounded-full border border-violet-100">{m.level}</span>
+                      )}
+                      {m.language && (
+                        <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100">{m.language}</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-3.5">
-                    {m.overall_score !== null && m.overall_score !== undefined ? (
-                      <div className="flex items-center gap-1">
-                        <StarRating value={Math.round(m.overall_score)} readonly size="sm" />
-                        <span className="text-xs text-slate-500">{m.overall_score.toFixed(1)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-purple-300">未評価</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3.5 text-slate-600 hidden lg:table-cell">
-                    {m.cost !== null && m.cost !== undefined ? `¥${m.cost.toLocaleString()}` : '-'}
+                    {renderCell(m)}
                   </td>
                   <td className="px-3 py-3.5 text-right">
                     <div className="flex justify-end gap-2">
@@ -374,21 +380,15 @@ export default function MaterialListPage() {
       {/* Pagination */}
       {total > LIMIT && (
         <div className="flex justify-center gap-3 mt-5">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="px-5 py-2 border-2 border-purple-100 rounded-xl text-sm disabled:opacity-40 hover:bg-purple-50 transition-all text-purple-600 font-medium"
-          >
+          <button disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}
+            className="px-5 py-2 border-2 border-purple-100 rounded-xl text-sm disabled:opacity-40 hover:bg-purple-50 transition-all text-purple-600 font-medium">
             前へ
           </button>
           <span className="px-5 py-2 text-sm text-purple-500 font-medium">
             {page + 1} / {Math.ceil(total / LIMIT)}
           </span>
-          <button
-            disabled={(page + 1) * LIMIT >= total}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-5 py-2 border-2 border-purple-100 rounded-xl text-sm disabled:opacity-40 hover:bg-purple-50 transition-all text-purple-600 font-medium"
-          >
+          <button disabled={(page + 1) * LIMIT >= total} onClick={() => setPage((p) => p + 1)}
+            className="px-5 py-2 border-2 border-purple-100 rounded-xl text-sm disabled:opacity-40 hover:bg-purple-50 transition-all text-purple-600 font-medium">
             次へ
           </button>
         </div>
