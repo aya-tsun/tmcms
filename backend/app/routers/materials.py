@@ -8,6 +8,7 @@ from ..models.user import User
 from ..models.material import Material
 from ..models.tag import Tag, MaterialTag
 from ..models.evaluation import Evaluation
+from ..models.learning_topic import MaterialLearningTopic
 from ..schemas.material import MaterialCreate, MaterialUpdate, MaterialOut, MaterialListOut
 from ..auth.jwt import get_current_user
 
@@ -49,6 +50,7 @@ def list_materials(
     search: Optional[str] = Query(None),
     provider: Optional[str] = Query(None),
     tag_ids: Optional[str] = Query(None),
+    learning_topic_ids: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
     sort_by: str = Query("created_at"),
@@ -80,6 +82,15 @@ def list_materials(
                 query = query.filter(
                     Material.id.in_(
                         db.query(MaterialTag.material_id).filter(MaterialTag.tag_id == tid)
+                    )
+                )
+    if learning_topic_ids:
+        ids = [int(x) for x in learning_topic_ids.split(",") if x.strip().isdigit()]
+        if ids:
+            for tid in ids:
+                query = query.filter(
+                    Material.id.in_(
+                        db.query(MaterialLearningTopic.material_id).filter(MaterialLearningTopic.topic_id == tid)
                     )
                 )
 

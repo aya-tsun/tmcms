@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { materialsApi, tagsApi, exportApi } from '../api';
-import type { Material, Tag, MaterialFilters } from '../types';
+import { materialsApi, tagsApi, exportApi, learningTopicsApi } from '../api';
+import type { Material, Tag, MaterialFilters, LearningTopic } from '../types';
 import StarRating from '../components/StarRating';
 import Layout from '../components/Layout';
 
@@ -22,12 +22,14 @@ export default function MaterialListPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [total, setTotal] = useState(0);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [allTopics, setAllTopics] = useState<LearningTopic[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
   const [level, setLevel] = useState('');
   const [language, setLanguage] = useState('');
   const [sort, setSort] = useState('created_at|desc');
@@ -47,6 +49,7 @@ export default function MaterialListPage() {
       if (search) params.search = search;
       if (provider) params.provider = provider;
       if (selectedTagIds.length > 0) params.tag_ids = selectedTagIds.join(',');
+      if (selectedTopicIds.length > 0) params.learning_topic_ids = selectedTopicIds.join(',');
       if (level) params.level = level;
       if (language) params.language = language;
 
@@ -58,14 +61,13 @@ export default function MaterialListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, provider, selectedTagIds, level, language, sort, page]);
+  }, [search, provider, selectedTagIds, selectedTopicIds, level, language, sort, page]);
 
-  useEffect(() => {
-    fetchMaterials();
-  }, [fetchMaterials]);
+  useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
 
   useEffect(() => {
     tagsApi.list().then((res) => setTags(res.data));
+    learningTopicsApi.list().then((res) => setAllTopics(res.data));
   }, []);
 
   const toggleSelect = (id: number) => {
@@ -89,7 +91,6 @@ export default function MaterialListPage() {
     if (provider) params.provider = provider;
     if (selectedTagIds.length > 0) params.tag_ids = selectedTagIds.join(',');
     if (selected.size > 0) params.material_ids = Array.from(selected).join(',');
-
     try {
       const fn = format === 'csv' ? exportApi.downloadCsv : exportApi.downloadXlsx;
       const res = await fn(params);
@@ -114,6 +115,7 @@ export default function MaterialListPage() {
     setSearch('');
     setProvider('');
     setSelectedTagIds([]);
+    setSelectedTopicIds([]);
     setLevel('');
     setLanguage('');
     setSort('created_at|desc');
@@ -121,6 +123,8 @@ export default function MaterialListPage() {
   };
 
   const inputClass = "border-2 border-purple-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 bg-white transition-all";
+
+  const hasActiveFilters = search || provider || selectedTagIds.length > 0 || selectedTopicIds.length > 0 || level || language;
 
   return (
     <Layout>
@@ -145,52 +149,40 @@ export default function MaterialListPage() {
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className={inputClass}
           />
-          <select
-            value={provider}
-            onChange={(e) => { setProvider(e.target.value); setPage(0); }}
-            className={inputClass}
-          >
+          <select value={provider} onChange={(e) => { setProvider(e.target.value); setPage(0); }} className={inputClass}>
             <option value="">提供元: すべて</option>
             {PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <select
-            value={level}
-            onChange={(e) => { setLevel(e.target.value); setPage(0); }}
-            className={inputClass}
-          >
+          <select value={level} onChange={(e) => { setLevel(e.target.value); setPage(0); }} className={inputClass}>
             <option value="">レベル: すべて</option>
             {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
-          <select
-            value={language}
-            onChange={(e) => { setLanguage(e.target.value); setPage(0); }}
-            className={inputClass}
-          >
+          <select value={language} onChange={(e) => { setLanguage(e.target.value); setPage(0); }} className={inputClass}>
             <option value="">言語: すべて</option>
             {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
-          <select
-            value={sort}
-            onChange={(e) => { setSort(e.target.value); setPage(0); }}
-            className={inputClass}
-          >
+          <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(0); }} className={inputClass}>
             {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <button
             onClick={resetFilters}
-            className="border-2 border-purple-100 rounded-xl px-3 py-2 text-sm text-purple-500 hover:bg-purple-50 transition-all font-medium"
+            className={`border-2 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
+              hasActiveFilters
+                ? 'border-violet-300 text-violet-600 bg-violet-50 hover:bg-violet-100'
+                : 'border-purple-100 text-purple-400 hover:bg-purple-50'
+            }`}
           >
-            リセット
+            {hasActiveFilters ? 'リセット ✕' : 'リセット'}
           </button>
         </div>
 
         {/* Tag filter */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <span className="text-xs text-purple-400 self-center font-medium">タグ:</span>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-purple-400 font-medium">タグ:</span>
             {tags.map((t) => (
               <button
                 key={t.id}
@@ -204,6 +196,31 @@ export default function MaterialListPage() {
                   selectedTagIds.includes(t.id)
                     ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
                     : 'bg-white text-violet-600 border-violet-200 hover:border-violet-400'
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Learning topic filter */}
+        {allTopics.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-purple-400 font-medium">学習項目:</span>
+            {allTopics.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setSelectedTopicIds((prev) =>
+                    prev.includes(t.id) ? prev.filter((x) => x !== t.id) : [...prev, t.id]
+                  );
+                  setPage(0);
+                }}
+                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-all font-medium ${
+                  selectedTopicIds.includes(t.id)
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                    : 'bg-white text-emerald-700 border-emerald-200 hover:border-emerald-400'
                 }`}
               >
                 {t.name}
@@ -230,16 +247,10 @@ export default function MaterialListPage() {
               比較 ({selected.size})
             </button>
           )}
-          <button
-            onClick={() => handleExport('csv')}
-            className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-          >
+          <button onClick={() => handleExport('csv')} className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-3 py-2 rounded-xl text-sm font-medium transition-all">
             CSV出力
           </button>
-          <button
-            onClick={() => handleExport('xlsx')}
-            className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-          >
+          <button onClick={() => handleExport('xlsx')} className="border-2 border-purple-100 bg-white hover:bg-purple-50 text-purple-600 px-3 py-2 rounded-xl text-sm font-medium transition-all">
             Excel出力
           </button>
         </div>
@@ -258,15 +269,13 @@ export default function MaterialListPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-purple-100" style={{ backgroundColor: '#faf5ff' }}>
               <tr>
-                <th className="w-10 px-3 py-3.5 text-left">
-                  <span className="sr-only">選択</span>
-                </th>
+                <th className="w-10 px-3 py-3.5 text-left"><span className="sr-only">選択</span></th>
                 <th className="px-3 py-3.5 text-left font-semibold text-purple-700">教材名</th>
                 <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden md:table-cell">提供元</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden lg:table-cell">タグ</th>
+                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden lg:table-cell">学習項目</th>
+                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden xl:table-cell">タグ</th>
                 <th className="px-3 py-3.5 text-left font-semibold text-purple-700">評価</th>
                 <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden lg:table-cell">費用</th>
-                <th className="px-3 py-3.5 text-left font-semibold text-purple-700 hidden xl:table-cell">登録日</th>
                 <th className="px-3 py-3.5 text-right font-semibold text-purple-700">操作</th>
               </tr>
             </thead>
@@ -274,9 +283,7 @@ export default function MaterialListPage() {
               {materials.map((m) => (
                 <tr
                   key={m.id}
-                  className={`hover:bg-violet-50/50 transition-colors ${
-                    selected.has(m.id) ? 'bg-violet-50' : ''
-                  }`}
+                  className={`hover:bg-violet-50/50 transition-colors ${selected.has(m.id) ? 'bg-violet-50' : ''}`}
                 >
                   <td className="px-3 py-3.5">
                     <input
@@ -288,10 +295,7 @@ export default function MaterialListPage() {
                     />
                   </td>
                   <td className="px-3 py-3.5">
-                    <Link
-                      to={`/materials/${m.id}`}
-                      className="font-semibold text-violet-700 hover:text-violet-900 hover:underline"
-                    >
+                    <Link to={`/materials/${m.id}`} className="font-semibold text-violet-700 hover:text-violet-900 hover:underline">
                       {m.name}
                     </Link>
                     {m.level && (
@@ -300,20 +304,41 @@ export default function MaterialListPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-3.5 text-slate-600 hidden md:table-cell">{m.provider}</td>
+                  <td className="px-3 py-3.5 text-slate-600 hidden md:table-cell">
+                    <div>{m.provider}</div>
+                    {m.provider_category && (
+                      <div className="text-xs text-amber-500 mt-0.5">{m.provider_category}</div>
+                    )}
+                  </td>
+                  {/* 学習項目 */}
                   <td className="px-3 py-3.5 hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
+                      {m.learning_topics.length > 0
+                        ? m.learning_topics.map((t) => (
+                            <span
+                              key={t.id}
+                              className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                                selectedTopicIds.includes(t.id)
+                                  ? 'bg-emerald-500 text-white border-emerald-500'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                              }`}
+                            >
+                              {t.name}
+                            </span>
+                          ))
+                        : <span className="text-xs text-purple-200">—</span>
+                      }
+                    </div>
+                  </td>
+                  {/* タグ */}
+                  <td className="px-3 py-3.5 hidden xl:table-cell">
+                    <div className="flex flex-wrap gap-1">
                       {m.tags.slice(0, 3).map((t) => (
-                        <span
-                          key={t.id}
-                          className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100"
-                        >
+                        <span key={t.id} className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full border border-violet-100">
                           {t.name}
                         </span>
                       ))}
-                      {m.tags.length > 3 && (
-                        <span className="text-xs text-purple-300">+{m.tags.length - 3}</span>
-                      )}
+                      {m.tags.length > 3 && <span className="text-xs text-purple-300">+{m.tags.length - 3}</span>}
                     </div>
                   </td>
                   <td className="px-3 py-3.5">
@@ -329,21 +354,12 @@ export default function MaterialListPage() {
                   <td className="px-3 py-3.5 text-slate-600 hidden lg:table-cell">
                     {m.cost !== null && m.cost !== undefined ? `¥${m.cost.toLocaleString()}` : '-'}
                   </td>
-                  <td className="px-3 py-3.5 text-slate-400 text-xs hidden xl:table-cell">
-                    {new Date(m.created_at).toLocaleDateString('ja-JP')}
-                  </td>
                   <td className="px-3 py-3.5 text-right">
                     <div className="flex justify-end gap-2">
-                      <Link
-                        to={`/materials/${m.id}/edit`}
-                        className="text-xs text-violet-600 hover:text-violet-800 border border-violet-200 hover:border-violet-400 hover:bg-violet-50 px-2.5 py-1 rounded-lg transition-all"
-                      >
+                      <Link to={`/materials/${m.id}/edit`} className="text-xs text-violet-600 hover:text-violet-800 border border-violet-200 hover:border-violet-400 hover:bg-violet-50 px-2.5 py-1 rounded-lg transition-all">
                         編集
                       </Link>
-                      <button
-                        onClick={() => handleDelete(m.id)}
-                        className="text-xs text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-300 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-all"
-                      >
+                      <button onClick={() => handleDelete(m.id)} className="text-xs text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-300 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-all">
                         削除
                       </button>
                     </div>

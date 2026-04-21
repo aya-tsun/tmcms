@@ -97,6 +97,7 @@ export interface MaterialFilters {
   search?: string;
   provider?: string;
   tag_ids?: string;
+  learning_topic_ids?: string;
   level?: string;
   language?: string;
   sort_by?: string;
