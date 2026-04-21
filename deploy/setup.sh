@@ -83,7 +83,7 @@ if [ ! -d "$DEPLOY_DIR" ]; then
   echo "  → クローン完了"
 else
   cd "$DEPLOY_DIR"
-  git pull origin main
+  git pull origin claude/training-material-cms-4h4fw
   echo "  → 最新版に更新"
 fi
 
