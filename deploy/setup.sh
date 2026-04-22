@@ -1,9 +1,8 @@
 #!/bin/bash
 # TMCMS セットアップスクリプト
-# さくらのVPS (Ubuntu 22.04) + Docker + Tailscale + Nginx
+# さくらのVPS (Ubuntu 22.04) + Docker + Nginx + Let's Encrypt
 set -euo pipefail
 
-# root で実行する
 if [ "$(id -u)" != "0" ]; then
   echo "ERROR: root で実行してください (sudo bash setup.sh)"
   exit 1
@@ -15,18 +14,33 @@ echo "  TMCMS セットアップ開始"
 echo "======================================"
 echo ""
 
+# ドメイン名を入力
+read -p "取得したドメイン名を入力してください (例: tmcms.example.com): " DOMAIN
+if [ -z "$DOMAIN" ]; then
+  echo "ERROR: ドメイン名を入力してください"
+  exit 1
+fi
+
+read -p "Let's Encrypt 用のメールアドレスを入力してください: " EMAIL
+if [ -z "$EMAIL" ]; then
+  echo "ERROR: メールアドレスを入力してください"
+  exit 1
+fi
+
+echo ""
+
 # ----------------------------------------
 # 1. システム更新
 # ----------------------------------------
-echo "[1/8] システムを更新中..."
+echo "[1/7] システムを更新中..."
 apt-get update -qq
 apt-get upgrade -y -qq
-apt-get install -y -qq git curl jq openssl
+apt-get install -y -qq git curl openssl
 
 # ----------------------------------------
 # 2. Docker インストール
 # ----------------------------------------
-echo "[2/8] Docker をインストール中..."
+echo "[2/7] Docker をインストール中..."
 if ! command -v docker &> /dev/null; then
   curl -fsSL https://get.docker.com | sh
   systemctl enable docker
@@ -37,49 +51,23 @@ else
 fi
 
 # ----------------------------------------
-# 3. Nginx インストール
+# 3. Nginx + Certbot インストール
 # ----------------------------------------
-echo "[3/8] Nginx をインストール中..."
-if ! command -v nginx &> /dev/null; then
-  apt-get install -y -qq nginx
-  echo "  → Nginx インストール完了"
-else
-  echo "  → スキップ (インストール済み)"
-fi
+echo "[3/7] Nginx / Certbot をインストール中..."
+apt-get install -y -qq nginx certbot python3-certbot-nginx
+systemctl enable nginx
+systemctl start nginx
+echo "  → インストール完了"
 
 # ----------------------------------------
-# 4. Tailscale インストール
-# ----------------------------------------
-echo "[4/8] Tailscale をインストール中..."
-if ! command -v tailscale &> /dev/null; then
-  curl -fsSL https://tailscale.com/install.sh | sh
-  echo "  → Tailscale インストール完了"
-else
-  echo "  → スキップ (インストール済み)"
-fi
-
-# ----------------------------------------
-# 5. Tailscale 認証
+# 4. リポジトリをクローン & 起動
 # ----------------------------------------
 echo ""
-echo "[5/8] Tailscale にログインします..."
-echo "  ブラウザで表示されるURLを開いて認証してください。"
-echo ""
-tailscale up --accept-routes --ssh
-
-TAILSCALE_HOST=$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')
-echo ""
-echo "  → Tailscale ホスト名: $TAILSCALE_HOST"
-
-# ----------------------------------------
-# 6. リポジトリをクローン & 起動
-# ----------------------------------------
-echo ""
-echo "[6/8] アプリをセットアップ中..."
+echo "[4/7] アプリをセットアップ中..."
 DEPLOY_DIR="/opt/tmcms"
 
 if [ ! -d "$DEPLOY_DIR" ]; then
-  git clone https://github.com/aya-tsun/tmcms.git "$DEPLOY_DIR"
+  git clone -b claude/training-material-cms-4h4fw https://github.com/aya-tsun/tmcms.git "$DEPLOY_DIR"
   echo "  → クローン完了"
 else
   cd "$DEPLOY_DIR"
@@ -89,48 +77,25 @@ fi
 
 cd "$DEPLOY_DIR"
 
-# .env ファイル作成
 if [ ! -f .env ]; then
   SECRET_KEY=$(openssl rand -hex 32)
   echo "SECRET_KEY=$SECRET_KEY" > .env
   echo "  → .env ファイルを作成しました"
 fi
 
-# Docker Compose で起動
 docker compose up -d --build
 echo "  → Docker コンテナ起動完了"
 
 # ----------------------------------------
-# 7. Tailscale HTTPS 証明書取得
+# 5. Nginx 初期設定 (HTTP)
 # ----------------------------------------
 echo ""
-echo "[7/8] HTTPS 証明書を取得中..."
-tailscale cert "$TAILSCALE_HOST"
-
-CERT_DIR="/var/lib/tailscale/certs"
-
-# Nginx が証明書を読めるように権限設定
-chmod 644 "$CERT_DIR/$TAILSCALE_HOST.crt"
-chmod 640 "$CERT_DIR/$TAILSCALE_HOST.key"
-chown root:www-data "$CERT_DIR/$TAILSCALE_HOST.key"
-
-echo "  → 証明書取得完了"
-
-# ----------------------------------------
-# 8. Nginx 設定
-# ----------------------------------------
-echo ""
-echo "[8/8] Nginx を設定中..."
+echo "[5/7] Nginx を設定中..."
 
 cat > /etc/nginx/sites-available/tmcms << EOF
 server {
-    listen 443 ssl;
-    server_name $TAILSCALE_HOST;
-
-    ssl_certificate $CERT_DIR/$TAILSCALE_HOST.crt;
-    ssl_certificate_key $CERT_DIR/$TAILSCALE_HOST.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
+    listen 80;
+    server_name $DOMAIN;
 
     client_max_body_size 10M;
 
@@ -139,45 +104,37 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
-}
-
-server {
-    listen 80;
-    server_name $TAILSCALE_HOST;
-    return 301 https://\$host\$request_uri;
 }
 EOF
 
 ln -sf /etc/nginx/sites-available/tmcms /etc/nginx/sites-enabled/tmcms
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
-systemctl enable nginx
-systemctl restart nginx
-
-# ----------------------------------------
-# 証明書の自動更新 (月1回)
-# ----------------------------------------
-cat > /etc/cron.monthly/tailscale-cert-renew << 'CRONEOF'
-#!/bin/bash
-HOST=$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')
-tailscale cert "$HOST"
-chmod 640 "/var/lib/tailscale/certs/$HOST.key"
-chown root:www-data "/var/lib/tailscale/certs/$HOST.key"
 systemctl reload nginx
-CRONEOF
-chmod +x /etc/cron.monthly/tailscale-cert-renew
+echo "  → Nginx 設定完了"
 
+# ----------------------------------------
+# 6. Let's Encrypt 証明書取得 & HTTPS化
+# ----------------------------------------
+echo ""
+echo "[6/7] HTTPS 証明書を取得中..."
+echo "  ※ ドメインのDNSがこのサーバーのIPを向いている必要があります"
+echo ""
+
+certbot --nginx -d "$DOMAIN" --email "$EMAIL" --agree-tos --non-interactive --redirect
+echo "  → HTTPS 設定完了 (証明書は90日ごとに自動更新)"
+
+# ----------------------------------------
+# 7. 完了
+# ----------------------------------------
 echo ""
 echo "======================================"
 echo "  セットアップ完了！"
 echo ""
-echo "  アクセスURL: https://$TAILSCALE_HOST"
+echo "  アクセスURL: https://$DOMAIN"
 echo "  ログイン:    admin@example.com"
 echo "             admin1234"
-echo ""
-echo "  ※ Tailscaleアプリを端末にも入れてください"
-echo "    https://tailscale.com/download"
 echo "======================================"
 echo ""
