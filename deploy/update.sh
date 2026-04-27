@@ -11,7 +11,7 @@ fi
 cd /opt/tmcms
 
 echo "最新版を取得中..."
-git pull origin claude/training-material-cms-4h4fw
+git pull origin main
 
 echo "コンテナを再ビルド・再起動中..."
 docker compose up -d --build
