@@ -96,10 +96,19 @@ export interface Memo {
 export interface MaterialFilters {
   search?: string;
   provider?: string;
+  provider_category?: string;
   tag_ids?: string;
   learning_topic_ids?: string;
   level?: string;
   language?: string;
+  delivery_method?: string;
+  duration_min?: number;
+  duration_max?: number;
+  cost_min?: number;
+  cost_max?: number;
+  score_min?: number;
+  score_max?: number;
+  memo_search?: string;
   sort_by?: string;
   sort_order?: string;
 }

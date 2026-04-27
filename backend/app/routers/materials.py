@@ -63,10 +63,19 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
 def list_materials(
     search: Optional[str] = Query(None),
     provider: Optional[str] = Query(None),
+    provider_category: Optional[str] = Query(None),
     tag_ids: Optional[str] = Query(None),
     learning_topic_ids: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
+    delivery_method: Optional[str] = Query(None),
+    duration_min: Optional[float] = Query(None),
+    duration_max: Optional[float] = Query(None),
+    cost_min: Optional[float] = Query(None),
+    cost_max: Optional[float] = Query(None),
+    score_min: Optional[float] = Query(None),
+    score_max: Optional[float] = Query(None),
+    memo_search: Optional[str] = Query(None),
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc"),
     skip: int = Query(0, ge=0),
@@ -74,6 +83,8 @@ def list_materials(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    from ..models.memo import Memo as MemoModel
+
     query = db.query(Material)
 
     if search:
@@ -85,10 +96,28 @@ def list_materials(
         )
     if provider:
         query = query.filter(Material.provider.ilike(f"%{provider}%"))
+    if provider_category:
+        query = query.filter(Material.provider_category.ilike(f"%{provider_category}%"))
     if level:
         query = query.filter(Material.level == level)
     if language:
         query = query.filter(Material.language == language)
+    if delivery_method:
+        query = query.filter(Material.delivery_methods.like(f"%{delivery_method}%"))
+    if duration_min is not None:
+        query = query.filter(Material.duration >= duration_min)
+    if duration_max is not None:
+        query = query.filter(Material.duration <= duration_max)
+    if cost_min is not None:
+        query = query.filter(Material.cost >= cost_min)
+    if cost_max is not None:
+        query = query.filter(Material.cost <= cost_max)
+    if memo_search:
+        query = query.filter(
+            Material.id.in_(
+                db.query(MemoModel.material_id).filter(MemoModel.content.ilike(f"%{memo_search}%"))
+            )
+        )
     if tag_ids:
         ids = [int(x) for x in tag_ids.split(",") if x.strip().isdigit()]
         if ids:
@@ -107,6 +136,23 @@ def list_materials(
                         db.query(MaterialLearningTopic.material_id).filter(MaterialLearningTopic.topic_id == tid)
                     )
                 )
+
+    # score_min/score_max は計算値なのでPython側でフィルタ
+    if score_min is not None or score_max is not None:
+        all_materials = query.all()
+        all_items = [_build_material_out(m, db) for m in all_materials]
+        filtered = [
+            item for item in all_items
+            if (score_min is None or (item.overall_score is not None and item.overall_score >= score_min))
+            and (score_max is None or (item.overall_score is not None and item.overall_score <= score_max))
+        ]
+        if sort_by == "overall_score":
+            filtered.sort(key=lambda x: (x.overall_score is not None, x.overall_score or 0), reverse=(sort_order == "desc"))
+        elif sort_by == "name":
+            filtered.sort(key=lambda x: x.name, reverse=(sort_order == "desc"))
+        total = len(filtered)
+        items = filtered[skip: skip + limit]
+        return MaterialListOut(items=items, total=total)
 
     total = query.count()
     materials = query.offset(skip).limit(limit).all()

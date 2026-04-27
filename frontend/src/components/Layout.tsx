@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth';
 
 const navItems = [
   { label: '教材一覧', path: '/' },
+  { label: '詳細検索', path: '/search' },
   { label: 'タグ管理', path: '/tags' },
 ];
 

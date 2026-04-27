@@ -4,6 +4,7 @@ import MaterialListPage from './pages/MaterialListPage';
 import MaterialDetailPage from './pages/MaterialDetailPage';
 import MaterialFormPage from './pages/MaterialFormPage';
 import ComparePage from './pages/ComparePage';
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import TagManagePage from './pages/TagManagePage';
 import UserManagePage from './pages/UserManagePage';
 import SettingsPage from './pages/SettingsPage';
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/materials/:id" element={<ProtectedRoute><MaterialDetailPage /></ProtectedRoute>} />
         <Route path="/materials/:id/edit" element={<ProtectedRoute><MaterialFormPage /></ProtectedRoute>} />
         <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
+        <Route path="/search" element={<ProtectedRoute><AdvancedSearchPage /></ProtectedRoute>} />
         <Route path="/tags" element={<ProtectedRoute><TagManagePage /></ProtectedRoute>} />
         <Route path="/users" element={<AdminRoute><UserManagePage /></AdminRoute>} />
         <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
