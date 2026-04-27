@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,6 +14,19 @@ from ..schemas.material import MaterialCreate, MaterialUpdate, MaterialOut, Mate
 from ..auth.jwt import get_current_user
 
 router = APIRouter(prefix="/api/materials", tags=["materials"])
+
+
+def _parse_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return []
+    return []
 
 
 def _build_material_out(material: Material, db: Session) -> MaterialOut:
@@ -33,7 +47,7 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
         cost=material.cost,
         level=material.level,
         language=material.language,
-        delivery_methods=material.delivery_methods or [],
+        delivery_methods=_parse_list(material.delivery_methods),
         description=material.description,
         created_at=material.created_at,
         created_by=material.created_by,
