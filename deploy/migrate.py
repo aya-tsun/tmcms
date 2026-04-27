@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 Render PostgreSQL → VPS SQLite データ移行スクリプト
-使い方: python3 migrate.py "postgresql://..."
+使い方: python3 migrate.py "postgresql://..." [sqlite_path]
 """
 import sys
 import json
 import sqlite3
+import subprocess
 import psycopg2
 
 if len(sys.argv) < 2:
@@ -13,7 +14,22 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 PG_URL = sys.argv[1]
-SQLITE_PATH = "/data/tmcms.db"
+
+if len(sys.argv) >= 3:
+    SQLITE_PATH = sys.argv[2]
+else:
+    # Docker ボリュームのパスを自動検出
+    try:
+        result = subprocess.run(
+            ["docker", "volume", "inspect", "tmcms_tmcms-data", "--format", "{{.Mountpoint}}"],
+            capture_output=True, text=True, check=True
+        )
+        mountpoint = result.stdout.strip()
+        SQLITE_PATH = f"{mountpoint}/tmcms.db"
+        print(f"Docker ボリューム検出: {SQLITE_PATH}")
+    except Exception:
+        SQLITE_PATH = "/data/tmcms.db"
+        print(f"フォールバック: {SQLITE_PATH}")
 
 print(f"PostgreSQL に接続中...")
 pg = psycopg2.connect(PG_URL, sslmode="require")
