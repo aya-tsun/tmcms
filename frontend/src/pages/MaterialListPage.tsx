@@ -17,8 +17,8 @@ const SORT_OPTIONS = [
   { value: 'name|desc', label: '教材名 (Z-A)' },
 ];
 
-type ColumnView = '提供元' | '学習項目' | 'タグ' | '費用' | '評価';
-const COLUMN_VIEWS: ColumnView[] = ['提供元', '学習項目', 'タグ', '費用', '評価'];
+type ColumnView = '提供元' | '学習項目' | 'タグ' | '費用' | '評価' | '対象者';
+const COLUMN_VIEWS: ColumnView[] = ['提供元', '学習項目', 'タグ', '費用', '評価', '対象者'];
 
 export default function MaterialListPage() {
   const navigate = useNavigate();
@@ -187,6 +187,12 @@ export default function MaterialListPage() {
           </div>
         ) : (
           <span className="text-xs text-purple-300">未評価</span>
+        );
+      case '対象者':
+        return m.target_audience ? (
+          <span className="text-sm text-slate-600 line-clamp-2">{m.target_audience}</span>
+        ) : (
+          <span className="text-xs text-purple-200">—</span>
         );
     }
   };

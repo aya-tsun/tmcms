@@ -49,6 +49,7 @@ def _build_material_out(material: Material, db: Session) -> MaterialOut:
         language=material.language,
         delivery_methods=_parse_list(material.delivery_methods),
         description=material.description,
+        target_audience=material.target_audience,
         created_at=material.created_at,
         created_by=material.created_by,
         creator_name=creator_name,
@@ -138,6 +139,7 @@ def create_material(
         language=data.language,
         delivery_methods=data.delivery_methods,
         description=data.description,
+        target_audience=data.target_audience,
         created_by=current_user.id,
     )
     db.add(material)
@@ -196,6 +198,8 @@ def update_material(
         material.delivery_methods = data.delivery_methods
     if data.description is not None:
         material.description = data.description
+    if data.target_audience is not None:
+        material.target_audience = data.target_audience
 
     if data.tag_ids is not None:
         db.query(MaterialTag).filter(MaterialTag.material_id == material_id).delete()

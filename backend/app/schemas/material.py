@@ -15,6 +15,7 @@ class MaterialCreate(BaseModel):
     language: Optional[MaterialLanguage] = None
     delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
+    target_audience: Optional[str] = None
     tag_ids: List[int] = []
 
     @field_validator("url")
@@ -36,6 +37,7 @@ class MaterialUpdate(BaseModel):
     language: Optional[MaterialLanguage] = None
     delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
+    target_audience: Optional[str] = None
     tag_ids: Optional[List[int]] = None
 
     @field_validator("url")
@@ -70,6 +72,7 @@ class MaterialOut(BaseModel):
     language: Optional[MaterialLanguage] = None
     delivery_methods: Optional[List[str]] = None
     description: Optional[str] = None
+    target_audience: Optional[str] = None
     created_at: datetime
     created_by: Optional[int] = None
     creator_name: Optional[str] = None

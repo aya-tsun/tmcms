@@ -52,6 +52,12 @@ def run_migrations():
                 db.execute(text('ALTER TABLE materials ADD COLUMN delivery_methods TEXT'))
             db.commit()
             print("Migration: added materials.delivery_methods")
+
+        # Add target_audience column if missing
+        if 'target_audience' not in cols:
+            db.execute(text('ALTER TABLE materials ADD COLUMN target_audience TEXT'))
+            db.commit()
+            print("Migration: added materials.target_audience")
     except Exception as e:
         print(f"Migration warning: {e}")
         db.rollback()
