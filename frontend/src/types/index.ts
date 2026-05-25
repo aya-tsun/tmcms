@@ -48,6 +48,7 @@ export interface Material {
   language?: MaterialLanguage;
   delivery_methods?: string[];
   description?: string;
+  target_audience?: string;
   created_at: string;
   created_by?: number;
   creator_name?: string;

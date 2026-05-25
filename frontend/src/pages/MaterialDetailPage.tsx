@@ -283,6 +283,13 @@ export default function MaterialDetailPage() {
               </div>
             )}
 
+            {material.target_audience && (
+              <div className="mt-4 pt-4 border-t border-purple-50">
+                <div className="text-xs text-purple-400 font-medium mb-1.5">対象者</div>
+                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{material.target_audience}</p>
+              </div>
+            )}
+
             {material.tags.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {material.tags.map((t) => (

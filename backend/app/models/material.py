@@ -35,6 +35,7 @@ class Material(Base):
     language = Column(Enum(MaterialLanguage), nullable=True)
     delivery_methods = Column(JSON, nullable=True)
     description = Column(Text, nullable=True)
+    target_audience = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
 

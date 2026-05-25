@@ -37,6 +37,7 @@ interface FormState {
   language: string;
   delivery_methods: string[];
   description: string;
+  target_audience: string;
   tag_ids: number[];
 }
 
@@ -56,6 +57,7 @@ export default function MaterialFormPage() {
     language: '',
     delivery_methods: [],
     description: '',
+    target_audience: '',
     tag_ids: [],
   });
 
@@ -81,6 +83,7 @@ export default function MaterialFormPage() {
           language: m.language || '',
           delivery_methods: m.delivery_methods || [],
           description: m.description || '',
+          target_audience: m.target_audience || '',
           tag_ids: m.tags.map((t) => t.id),
         });
         setLoading(false);
@@ -119,6 +122,7 @@ export default function MaterialFormPage() {
         language: form.language || undefined,
         delivery_methods: form.delivery_methods.length > 0 ? form.delivery_methods : undefined,
         description: form.description.trim() || undefined,
+        target_audience: form.target_audience.trim() || undefined,
         tag_ids: form.tag_ids,
       };
       if (isEdit && id) {
@@ -337,6 +341,14 @@ export default function MaterialFormPage() {
             <textarea value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={4} placeholder="教材の概要、特徴、社内での利用実績など"
+              className="w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 resize-y transition-all" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-purple-700 mb-1.5">対象者</label>
+            <textarea value={form.target_audience}
+              onChange={(e) => setForm((f) => ({ ...f, target_audience: e.target.value }))}
+              rows={3} placeholder="例: 新入社員、エンジニア初学者、マネージャー向け"
               className="w-full border-2 border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 bg-purple-50/30 resize-y transition-all" />
           </div>
         </div>
